@@ -109,7 +109,7 @@ gulp.task('watch_files', function() {
 
 gulp.task('gh_pages', ['default'], function () {
   gulp.src(paths.dist.root + '/**/*')
-    .pipe($.ghPages('https://github.com/rileyjshaw/own-this-website.git', 'origin'));
+    .pipe($.ghPages('https://github.com/rileyjshaw/own-this-website-global.git', 'origin'));
 });
 
 gulp.task('connect', ['default'], $.connect.server({
