@@ -26,7 +26,7 @@ if(!argv.hasOwnProperty('url')) {
   argv.url = argv.dev ? 'localhost' : 'toyserver.rileyjshaw.com';  //replace this with your own socket server
 }
 if(!argv.hasOwnProperty('port')) {
-  argv.port = '8000';
+  argv.port = '8001';
 }
 
 var paths = {
