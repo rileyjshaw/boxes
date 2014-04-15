@@ -1,3 +1,5 @@
+// run on server with:
+// "forever start -a --spinSleepTime 10000 -l ~/own-this-website-personal/logs/forever_log.txt -o ~/own-this-website-personal/logs/nodemon_log.txt -e ~/own-this-website-personal/logs/error_log.txt /usr/local/bin/nodemon ~/own-this-website-personal/main.js --exitcrash"
 var io = require('socket.io').listen(8001);
 var redis = require('redis');
 var redis_client = redis.createClient();
@@ -76,7 +78,7 @@ function setKing(name, socket) {
     ipSpamChecker[socket.ipAddress] = 1;
   } else if(++ipSpamCount > 400) {
     if(socket.ipWarningFlag) {
-      socket.emit('news', 'There\'s too much traffic from your network; refresh to reconnect!');
+      socket.emit('news', 'There\'s too much traffic from your network. Try not to ruin the game for everyone, refresh to reconnect.');
       socket.disconnect();
     } else {
       socket.ipWarningFlag = 1;
@@ -84,25 +86,37 @@ function setKing(name, socket) {
     }
   } else ++ipSpamChecker[socket.ipAddress];
 
-  if(typeof name === 'string' && name === name.toUpperCase()) {
-    if(name !== king.name) {
-      redis_client.zscore('scores', name, function(err, res) {
-        if (res === null) {
-          redis_client.zadd('scores', 0, name);
-          res = 0;
-        }
-        changeStoredKing(name, res);
-      });
-    } else {
-      socket.emit('news', 'You\'re already the king. Chill out!');
-    }
+  if(typeof name !== 'string') {
+    socket.emit('news', 'Your name should be a string, sneakypants.');
+    socket.superStrikes++;
+  } else if(name.length > 12) {
+    socket.emit('news', 'Your name can\'t be more than 12 characters, greedyguts.');
+    socket.superStrikes++;
+  } else if(name !== name.toUpperCase()) {
+    socket.emit('news', 'How did those lowercases get in there? Something\'s fishy...');
+    socket.superStrikes++;
+  } else if(name === king.name) {
+    socket.emit('news', 'You\'re already the king. Chill out!');
+    socket.superStrikes += 0.5;
   } else {
-    socket.emit('news', 'Your name should be an uppercase string, sneakypants.');
+    redis_client.zscore('scores', name, function(err, res) {
+      if (res === null) {
+        redis_client.zadd('scores', 0, name);
+        res = 0;
+      }
+      changeStoredKing(name, res);
+    });
+  }
+
+  if(socket.superStrikes >= 3) {
+    socket.emit('news', 'Okay, I get it, you\'re 1337. Try not to ruin the game for everyone, refresh to reconnect.');
+    socket.disconnect();
   }
 }
 
 io.sockets.on('connection', function(socket) {
-  socket.ipAddress = socket.handshake.address.address + ':' + socket.handshake.address.port;
+  socket.superStrikes = 0;
+  socket.ipAddress = socket.handshake.address.address;
   newConnections.push(socket);
   socket.on('setKing', function(name) {
     setKing(name, socket);
