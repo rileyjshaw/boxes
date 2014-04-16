@@ -172,6 +172,5 @@ gulp.task('clean_dist', function () {
   return gulp.src(paths.dist.root, {read: false})
     .pipe($.clean({force: true})); // !!!
 });
-
 gulp.task('watch', ['default', 'watch_files', 'connect']);
 gulp.task('deploy', ['default', 'gh_pages']);
