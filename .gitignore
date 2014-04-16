@@ -3,3 +3,5 @@ node_modules
 dist
 bower_components
 dump.rdb
+logs
+*.log
