@@ -6,15 +6,10 @@ Page = require('./page.jsx');
 var UI = React.createClass({
   getInitialState: function() {
     return {
-      page: 'throne',
-      kingName: '',
-      kingScore: 0,
-      scores: [1, 2, 3],
-      secondsElapsed: 0
+      page: '1',
+      boxCount: 1,
+      messages: [['']]
     };
-  },
-  tick: function() {
-    this.setState({secondsElapsed: this.state.secondsElapsed + 1});
   },
   handlePageChange: function(page) {
     this.setState({ page: page });
@@ -25,15 +20,11 @@ var UI = React.createClass({
       this.socket.on('news', function(message) {
         console.log(message);
       });
-      this.socket.on('updateKing', (function (king) {
-        this.setState({kingName: king.name, kingScore: +king.score, secondsElapsed: 0});
+      this.socket.on('updateMessage', (function (index, message) {
+        this.setState({messages[index]: message});
       }).bind(this));
-      this.socket.on('updateKingInitial', (function (king) {
-        this.setState({kingName: king.name, kingScore: king.score, secondsElapsed: 0});
-        if(!this.timer) {
-          this.timer = setInterval(this.tick, 1000);
-          this.tick();
-        }
+      this.socket.on('loadMessages', (function (messages) {
+        this.setState({messages: messages});
       }).bind(this));
     } else {
       throw new Error('window.location.hostname is ' + window.location.hostname +
@@ -42,17 +33,19 @@ var UI = React.createClass({
     }
   },
   render: function() {
+    var tinyBoxes = this.state.messages.map(function(message) {
+      return (
+        <tinyBox message={message}>
+      );
+    });
+
     return (
       <ReactCSSTransitionGroup transitionName="window" component={React.DOM.div}>
-        <Page key={this.state.page} onPageChange={this.handlePageChange} socket={this.socket} secondsElapsed={this.state.secondsElapsed} name={this.state.kingName}
-          pageSpecificScore={ this.state.page === 'throne'
-                      ? this.state.kingScore
-                      : this.state.scores
-          }
-        />
+        {tinyBoxes}
       </ReactCSSTransitionGroup>
     );
   }
+
 });
 
 module.exports = UI;
