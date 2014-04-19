@@ -19,14 +19,14 @@ if(!argv.hasOwnProperty('cdn')) {
   if(argv.dev || argv._[0] === 'watch') {
     argv.cdn = 'localhost';
   } else {
-    argv.cdn = 'own.rileyjshaw.com';  //replace this with wherever you're keeping the static content
+    argv.cdn = 'tinybox.es';  //replace this with wherever you're keeping the static content
   }
 }
 if(!argv.hasOwnProperty('url')) {
   argv.url = argv.dev ? 'localhost' : 'toyserver.rileyjshaw.com';  //replace this with your own socket server
 }
 if(!argv.hasOwnProperty('port')) {
-  argv.port = '8001';
+  argv.port = '8002';
 }
 
 var paths = {
@@ -148,7 +148,7 @@ gulp.task('watch_files', function() {
 
 gulp.task('gh_pages', ['default'], function () {
   gulp.src(paths.dist.root + '/**/*')
-    .pipe($.ghPages('https://github.com/rileyjshaw/own-this-website-global.git', 'origin'));
+    .pipe($.ghPages('https://github.com/rileyjshaw/boxes.git', 'origin'));
 });
 
 gulp.task('connect', ['default'], $.connect.server({
