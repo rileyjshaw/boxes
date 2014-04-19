@@ -30,9 +30,11 @@ var UI = React.createClass({
       this.socket = io.connect('http://' + this.props.socketUrl + ':' + this.props.socketPort);
 
       this.socket.on('updateMessage', (function (index, message) {
-        this.setState({messages[index]: message});
+        var newMessages = this.state.messages;
+        newMessages[index] = message;
+        this.setState({messages: newMessages});
       }).bind(this));
-      this.socket.on('loadMessages', (function (messages) {
+      this.socket.on('updateMessages', (function (messages) {
         this.setState({messages: messages});
       }).bind(this));
     } else {

@@ -65,7 +65,7 @@ function setMessage(index, message, socket) {
 io.sockets.on('connection', function(socket) {
   socket.superStrikes = 0;
   socket.ipAddress = socket.handshake.address.address;
-  socket.emit('loadMessages', messages);
+  socket.emit('updateMessages', messages);
 
   socket.on('setMessage', function(index, message) {
     setMessage(index, message, socket);
