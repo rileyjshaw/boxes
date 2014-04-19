@@ -1,62 +1,17 @@
-// run on server with:
-// "forever start -a --spinSleepTime 10000 -l ~/own-this-website-personal/logs/forever_log.txt -o ~/own-this-website-personal/logs/nodemon_log.txt -e ~/own-this-website-personal/logs/error_log.txt /usr/local/bin/nodemon ~/own-this-website-personal/main.js --exitcrash"
-var io = require('socket.io').listen(8001);
-var redis = require('redis');
-var redis_client = redis.createClient();
-
-var newConnections = [];
+var io = require('socket.io').listen(8002);
+var messages = [];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
 
-var king = {
-  name: 'NOBODY',
-  score: 0
-};
-
-var officialScoreKeeper = setInterval(function() {
-  var name = king.name;
-  var i = newConnections.length;
-
-  // Start a synchronized timer for all the new connections
-  while(i--) {
-    newConnections.pop().emit('updateKingInitial', king);
-  }
-
-  // Update the king's score in redis
-  if (name) {
-    redis_client.zincrby('scores', 1, name);
-  }
-
-  // Update the king's score locally
-  king.score++;
+var fadeClock = setInterval(function() {
+  //TODO: Handle fades
 
   // Clear the spam checker
   ipSpamChecker = {};
   socketSpamChecker = {};
 }, 1000);
 
-// TODO: set up publish / subscribe
-// https://github.com/mranney/node_redis
-redis_client.on("error", function (err) {
-  console.log("Redis error: " + err);
-});
-
-function getHighScores(socket) {
-  redis_client.zrevrange(['scores', 0, 9, 'WITHSCORES'], function(err, res) {
-    socket.emit('updateHighScores', res);
-  });
-}
-
-function changeStoredKing(name, score) {
-  king = {
-    name: name,
-    score: score
-  };
-  io.sockets.emit('updateKing', king);
-}
-
-function setKing(name, socket) {
-  var score;
+function setMessage(index, message, socket) {
   var ipSpamCount = ipSpamChecker[socket.ipAddress];
   var socketSpamCount = socketSpamChecker[socket.id];
 
@@ -86,30 +41,23 @@ function setKing(name, socket) {
     }
   } else ++ipSpamChecker[socket.ipAddress];
 
-  if(typeof name !== 'string') {
-    socket.emit('news', 'Your name should be a string, sneakypants.');
+  if(typeof message !== 'string') {
+    socket.emit('news', 'Your message should be a string.');
     socket.superStrikes++;
-  } else if(name.length > 12) {
-    socket.emit('news', 'Your name can\'t be more than 12 characters, greedyguts.');
+  } else if(name.length > 60) {
+    socket.emit('news', 'Your message can\'t be more than 60 characters.');
     socket.superStrikes++;
-  } else if(name !== name.toUpperCase()) {
-    socket.emit('news', 'How did those lowercases get in there? Something\'s fishy...');
-    socket.superStrikes++;
-  } else if(name === king.name) {
-    socket.emit('news', 'You\'re already the king. Chill out!');
-    socket.superStrikes += 0.5;
+  } else if(message === messages[index]) {
+    socket.emit('news', 'That\'s already the message, yo!');
+    socket.superStrikes += 0.3;
   } else {
-    redis_client.zscore('scores', name, function(err, res) {
-      if (res === null) {
-        redis_client.zadd('scores', 0, name);
-        res = 0;
-      }
-      changeStoredKing(name, res);
+      messages[index] = message;
+      io.sockets.emit('updateMessage', index, message);
     });
   }
 
   if(socket.superStrikes >= 3) {
-    socket.emit('news', 'Okay, I get it, you\'re 1337. Try not to ruin the game for everyone, refresh to reconnect.');
+    socket.emit('news', 'It looks like we\'re getting a lot of errors from your session, refresh to reconnect.');
     socket.disconnect();
   }
 }
@@ -117,11 +65,9 @@ function setKing(name, socket) {
 io.sockets.on('connection', function(socket) {
   socket.superStrikes = 0;
   socket.ipAddress = socket.handshake.address.address;
-  newConnections.push(socket);
-  socket.on('setKing', function(name) {
-    setKing(name, socket);
-  });
-  socket.on('getHighScores', function() {
-    getHighScores(socket);
+  socket.emit('loadMessages', messages);
+
+  socket.on('setMessage', function(index, message) {
+    setMessage(index, message, socket);
   });
 });
