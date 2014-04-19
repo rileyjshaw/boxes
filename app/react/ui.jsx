@@ -16,10 +16,19 @@ var UI = React.createClass({
   },
   componentDidMount: function() {
     if(window.location.hostname === this.props.cdnUrl) {
+      // extend io.connect to add a news listener to all new connections
+      io.connect = (function(originalFunction) {
+        return function(url) {
+          var socket = originalFunction(url);
+          socket.on('news', function(message) {
+            console.log(message);
+          });
+          return socket;
+        };
+      })(io.connect);
+
       this.socket = io.connect('http://' + this.props.socketUrl + ':' + this.props.socketPort);
-      this.socket.on('news', function(message) {
-        console.log(message);
-      });
+
       this.socket.on('updateMessage', (function (index, message) {
         this.setState({messages[index]: message});
       }).bind(this));
