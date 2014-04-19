@@ -5,3 +5,4 @@ bower_components
 dump.rdb
 logs
 *.log
+temp
