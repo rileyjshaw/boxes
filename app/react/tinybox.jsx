@@ -6,7 +6,9 @@ var TinyBox = React.createClass({
     this.props.handleFocus(index);
   },
   setFocusToSelf: function() {
-    this.handleFocus(this.props.index);
+    this.props.active
+      ? this.refs.form.refs.msgInput.getDOMNode().focus()
+      : this.handleFocus(this.props.index);
   },
   handleSubmit: function(message) {
     this.props.handleSubmit(this.props.index, message);
@@ -56,7 +58,7 @@ var TinyBox = React.createClass({
         </ReactCSSTransitionGroup>
 
         {this.props.active
-          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} style={
+          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} ref="form" style={
             {
               color: 'rgb(' + superDarkColor + ')',
               backgroundColor: 'rgb(' + darkColor + ')'
