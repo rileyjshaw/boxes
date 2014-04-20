@@ -44,8 +44,8 @@ function setMessage(index, message, socket) {
   if (typeof message !== 'string') {
     socket.emit('news', 'Your message should be a string.');
     socket.superStrikes++;
-  } else if(message.length > 30) {
-    socket.emit('news', 'Your message can\'t be more than 30 characters.');
+  } else if(message.length > 60) {
+    socket.emit('news', 'Your message can\'t be more than 60 characters.');
     socket.superStrikes++;
   } else if(message === messages[index]) {
     socket.emit('news', 'That\'s already the message, yo!');

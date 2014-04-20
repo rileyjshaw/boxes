@@ -25,6 +25,9 @@ var TinyBox = React.createClass({
 });
 
 var InputForm = React.createClass({
+  getInitialState: function() {
+    return {value: ''};
+  },
   componentDidMount: function() {
     key.setScope('input');
     key.filter = function filter(event){
@@ -44,24 +47,27 @@ var InputForm = React.createClass({
     };
     key.unbind('esc', this.props.handleBlur);
   },
+  handleChange: function(event) {
+    this.setState({value: event.target.value.substr(0, 59)});
+  },
   handleSubmit: function() {
     var msgInputNode = this.refs.msgInput.getDOMNode();
     var msgInput = msgInputNode.value.trim();
     if(msgInput !== this.props.currentMsg) {
-      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 30) {
+      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 60) {
         console.log('There was an issue with your input');
       } else {
         this.props.handleSubmit(msgInput);
       }
     }
-    msgInputNode.value = '';
+    this.setState({value: ''});
     return false;
   },
   render: function() {
     return (
       <form className="messageForm" onSubmit={this.handleSubmit} ref="form">
-        <input type="text" ref="msgInput" maxlength="30" />
-        <button type="submit" value="Go">➔</button>
+        <input type="text" ref="msgInput" onChange={this.handleChange} value={this.state.value} />
+        <button type="submit">➔</button>
       </form>
     );
   }
