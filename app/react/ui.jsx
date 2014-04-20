@@ -11,8 +11,7 @@ var UI = React.createClass({
       baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
       grays: [], // set in componentWillMount
       lockTime: 180,
-      locks: [false],
-      lockIndices: []
+      locks: [false]
     };
   },
   resetLocks: function() {
@@ -22,7 +21,6 @@ var UI = React.createClass({
       newLocks.push(false);
     }
     this.setState({locks: newLocks});
-    this.setState({lockIndices: []});
   },
   setFocus: function(index) {
     this.setState({activeBox: index});
@@ -32,15 +30,8 @@ var UI = React.createClass({
   },
   lockBox: function(index) {
     var newLocks = this.state.locks;
-    var newLockIndices = this.state.lockIndices;
     newLocks[index] = true;
-    newLockIndices.push(index);
-    if (newLockIndices.length === this.state.boxCount / 2) {
-      this.downsize();
-    } else {
-      this.setState({locks: newLocks});
-      this.setState({lockIndices: newLockIndices});
-    }
+    this.setState({locks: newLocks});
   },
   tick: function() {
     var newMessages = this.state.messages;
@@ -58,7 +49,7 @@ var UI = React.createClass({
     })});
   },
   componentDidMount: function() {
-    if(window.location.hostname === this.props.cdnUrl) {
+    if (window.location.hostname === this.props.cdnUrl) {
       // extend io.connect to add a news listener to all new connections
       io.connect = (function(originalFunction) {
         return function(url) {
@@ -79,7 +70,7 @@ var UI = React.createClass({
       }).bind(this));
       this.socket.on('updateMessages', (function (messages) {
         this.setState({messages: messages});
-        if(!this.timer) {
+        if (!this.timer) {
           this.timer = setInterval(this.tick, 1000);
           this.tick();
         }
