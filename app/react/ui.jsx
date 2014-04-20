@@ -9,7 +9,8 @@ var UI = React.createClass({
       boxCount: 1,
       messages: [['', 0]],
       baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
-      lockTime: 30,
+      grays: [], // set in componentWillMount
+      lockTime: 180,
       locks: [false],
       lockIndices: []
     };
@@ -51,6 +52,11 @@ var UI = React.createClass({
     }).bind(this));
     this.setState({messages: newMessages})
   },
+  componentWillMount: function() {
+    this.setState({grays: this.state.baseColors.map(function(color) {
+      return (color[0] + color[1] + color[2]) / 3;
+    })});
+  },
   componentDidMount: function() {
     if(window.location.hostname === this.props.cdnUrl) {
       // extend io.connect to add a news listener to all new connections
@@ -88,7 +94,8 @@ var UI = React.createClass({
     var tinyBoxes = this.state.messages.map((function(messagePair, index) {
       return (
         this.state.locks[index]
-          ? <div className="lockedBox" />
+          ? <div className="lockedBox"
+            style={{backgroundColor: 'rgb(' + this.state.grays[index] + ', ' + this.state.grays[index] + ', ' + this.state.grays[index] + ')'}} />
           : <TinyBox
             lockTime={this.state.lockTime}
             baseColor={this.state.baseColors[index]}
@@ -97,6 +104,7 @@ var UI = React.createClass({
             active={this.state.activeBox === index}
             handleFocus={this.setFocus}
             handleSubmit={this.handleSubmit}
+            gray={this.state.grays[index]}
           >{messagePair[1]}</TinyBox>
       );
     }).bind(this));

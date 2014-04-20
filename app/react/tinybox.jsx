@@ -2,9 +2,6 @@ var React = require('react/addons');
 var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 var TinyBox = React.createClass({
-  getInitialState: function() {
-    return {gray: (this.props.baseColor[0] + this.props.baseColor[1] + this.props.baseColor[2]) / 3};
-  },
   handleFocus: function(index) {
     this.props.handleFocus(index);
   },
@@ -20,7 +17,7 @@ var TinyBox = React.createClass({
     });
   },
   render: function() {
-    var gray = this.state.gray;
+    var gray = this.props.gray;
     var fade = this.props.fade;
     var lockTime = this.props.lockTime;
     var lockBreakpoint = lockTime * 2 / 3;
@@ -33,7 +30,7 @@ var TinyBox = React.createClass({
     var baseColor = this.props.baseColor.map((function(value) {
       return fade < lockBreakpoint
         ? Math.floor(((lockBreakpoint - fade) * value + fade * gray) / lockBreakpoint)
-        : Math.floor(((lockTime - fade) * gray + (fade - lockBreakpoint) * 48) / lockRemainder);
+        : gray;
     }).bind(this));
 
     console.log(shiftVal, baseColor);
