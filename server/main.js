@@ -18,7 +18,7 @@ var messageCounter = 0;
 var fadeClock = setInterval(function() {
   // Lock a box if it has been inactive for 180s
   var lockHandler = function(message, index) {
-    if (++message[1] === LOCK_TIME) {
+    if (++message[1] === LOCK_TIME && index) {
       locks[index] = true;
       // Downsize if half of the boxes are locked
       if (++lockCount === boxCount / 2) {
