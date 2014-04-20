@@ -1,4 +1,5 @@
 var React = require('react/addons');
+var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 var TinyBox = React.createClass({
   getInitialState: function() {
@@ -31,7 +32,9 @@ var TinyBox = React.createClass({
           backgroundColor: 'rgb(' + baseColor + ')'
         }
       }>
-        <p>{this.props.children}</p>
+        <ReactCSSTransitionGroup className="messageTransitionContainer" transitionName="message" component={React.DOM.div}>
+          <MessageBanner key={this.props.children} />
+        </ReactCSSTransitionGroup>
 
         {this.props.active
           ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} style={
@@ -44,6 +47,12 @@ var TinyBox = React.createClass({
         }
       </div>
     );
+  }
+});
+
+var MessageBanner = React.createClass({
+  render: function() {
+    return <p>{this.props.key}</p>
   }
 });
 

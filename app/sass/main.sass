@@ -26,8 +26,25 @@ body, input, select, textarea, button
   float: left
   height: 33.33333333%
   width: 33.33333333%
+  overflow: hidden
   cursor: pointer
   font-size: 30px
+
+.messageTransitionContainer p
+  position: absolute
+
+.message-enter, .message-leave
+  transition: top 0.3s linear
+
+.message-enter
+  top: 100%
+  &.message-enter-active
+    top: 0
+
+.message-leave
+  top: 0
+  &.message-leave-active
+    top: -100%
 
 p
   margin: 0
