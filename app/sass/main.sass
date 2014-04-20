@@ -21,14 +21,19 @@ body, input, select, textarea, button
   text-transform: uppercase
   color: #ccc
 
-.tinyBox
+.tinyBox, .lockedBox
   position: relative
   float: left
   height: 33.33333333%
   width: 33.33333333%
   overflow: hidden
-  cursor: pointer
   font-size: 30px
+
+.tinyBox
+  cursor: pointer
+
+.lockedBox
+  background: #333
 
 .messageTransitionContainer p
   position: absolute

@@ -8,8 +8,19 @@ var UI = React.createClass({
       activeBox: -1,
       boxCount: 1,
       messages: [['', 0]],
-      baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]]
+      baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
+      locks: [false],
+      lockIndices: []
     };
+  },
+  resetLocks: function() {
+    var boxCount = this.state.boxCount;
+    var newLocks = [];
+    while(boxCount--) {
+      newLocks.push(false);
+    }
+    this.setState({locks: newLocks});
+    this.setState({lockIndices: []});
   },
   setFocus: function(index) {
     this.setState({activeBox: index});
@@ -17,11 +28,26 @@ var UI = React.createClass({
   handleSubmit: function(index, message) {
     this.socket.emit('setMessage', index, message);
   },
+  lockBox: function(index) {
+    var newLocks = this.state.locks;
+    var newLockIndices = this.state.lockIndices;
+    newLocks[index] = true;
+    newLockIndices.push(index);
+    if (newLockIndices.length === this.state.boxCount / 2) {
+      this.downsize();
+    } else {
+      this.setState({locks: newLocks});
+      this.setState({lockIndices: newLockIndices});
+    }
+  },
   tick: function() {
     var newMessages = this.state.messages;
-    newMessages.map(function(pair) {
-      pair[1]++;
-    });
+    // increment fade counters and lock any boxes that have been inactive for 180s
+    newMessages.map((function(pair, index) {
+      if (++pair[1] === 10) {
+        this.lockBox(index);
+      }
+    }).bind(this));
     this.setState({messages: newMessages})
   },
   componentDidMount: function() {
@@ -60,7 +86,9 @@ var UI = React.createClass({
   render: function() {
     var tinyBoxes = this.state.messages.map((function(messagePair, index) {
       return (
-        <TinyBox baseColor={this.state.baseColors[index]} fade={messagePair[1]} index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{messagePair[0]}</TinyBox>
+        this.state.locks[index]
+          ? <div className="lockedBox" />
+          : <TinyBox baseColor={this.state.baseColors[index]} fade={messagePair[1]} index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{messagePair[0]}</TinyBox>
       );
     }).bind(this));
 
