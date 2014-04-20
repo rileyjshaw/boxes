@@ -1,19 +1,22 @@
-var React = require('react/addons');
+var React = require('react');
 
 var TinyBox = React.createClass({
-  handlePageChange: function(page) {
-    this.props.onPageChange(page);
+  handleFocus: function(index) {
+    this.props.handleFocus(index);
   },
-  handleFocus: function() {
-    this.props.handleFocus(this.props.index);
+  setFocusToSelf: function() {
+    this.handleFocus(this.props.index);
+  },
+  handleSubmit: function(message) {
+    this.props.handleSubmit(this.props.index, message);
   },
   render: function() {
     return (
-      <div className="tinyBox" onClick={this.handleFocus}>
+      <div className="tinyBox" onClick={this.setFocusToSelf}>
         <p>{this.props.children}</p>
 
         {this.props.active
-          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.props.handleSubmit} currentMsg={this.props.children} />
+          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} />
           : false
         }
       </div>

@@ -1,5 +1,5 @@
 var io = require('socket.io').listen(8002);
-var messages = [];
+var messages = ['Welcome', 'to', 'tinybox.es', 'we', 'hope', 'you', 'enjoy', 'your', 'stay'];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
 
@@ -16,9 +16,9 @@ function setMessage(index, message, socket) {
   var socketSpamCount = socketSpamChecker[socket.id];
 
   // Check for spamming from a single socket (warning at > 5 / second)
-  if(!socketSpamCount) {
+  if (!socketSpamCount) {
     socketSpamChecker[socket.id] = 1;
-  } else if(socketSpamCount > 5) {
+  } else if (socketSpamCount > 5) {
     if(socket.socketWarningFlag) {
       socket.emit('news', 'There\'s too much traffic from your computer; refresh to reconnect!');
       socket.disconnect();
@@ -29,9 +29,9 @@ function setMessage(index, message, socket) {
   } else ++socketSpamChecker[socket.id];
 
   // Check for spamming from a single IP address (warning at > 400 / second)
-  if(!ipSpamCount) {
+  if (!ipSpamCount) {
     ipSpamChecker[socket.ipAddress] = 1;
-  } else if(++ipSpamCount > 400) {
+  } else if (++ipSpamCount > 400) {
     if(socket.ipWarningFlag) {
       socket.emit('news', 'There\'s too much traffic from your network. Try not to ruin the game for everyone, refresh to reconnect.');
       socket.disconnect();
@@ -41,22 +41,21 @@ function setMessage(index, message, socket) {
     }
   } else ++ipSpamChecker[socket.ipAddress];
 
-  if(typeof message !== 'string') {
+  if (typeof message !== 'string') {
     socket.emit('news', 'Your message should be a string.');
     socket.superStrikes++;
-  } else if(name.length > 60) {
-    socket.emit('news', 'Your message can\'t be more than 60 characters.');
+  } else if(message.length > 30) {
+    socket.emit('news', 'Your message can\'t be more than 30 characters.');
     socket.superStrikes++;
   } else if(message === messages[index]) {
     socket.emit('news', 'That\'s already the message, yo!');
     socket.superStrikes += 0.3;
   } else {
-      messages[index] = message;
-      io.sockets.emit('updateMessage', index, message);
-    });
+    messages[index] = message;
+    io.sockets.emit('updateMessage', index, message);
   }
 
-  if(socket.superStrikes >= 3) {
+  if (socket.superStrikes >= 3) {
     socket.emit('news', 'It looks like we\'re getting a lot of errors from your session, refresh to reconnect.');
     socket.disconnect();
   }

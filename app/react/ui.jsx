@@ -1,5 +1,4 @@
-var React = require('react/addons');
-var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+var React = require('react');
 
 var TinyBox = require('./tinybox.jsx');
 
@@ -7,9 +6,9 @@ var UI = React.createClass({
   getInitialState: function() {
     return {
       page: '1',
-      activeBox: 1,
+      activeBox: -1,
       boxCount: 1,
-      messages: ['Welcome', 'to', 'tinybox.es', 'we', 'hope', 'you', 'enjoy', 'your', 'stay']
+      messages: []
     };
   },
   handlePageChange: function(page) {
@@ -18,8 +17,8 @@ var UI = React.createClass({
   setFocus: function(index) {
     this.setState({activeBox: index});
   },
-  handleSubmit: function(message) {
-    this.socket.emit('setMessage', message);
+  handleSubmit: function(index, message) {
+    this.socket.emit('setMessage', index, message);
   },
   componentDidMount: function() {
     if(window.location.hostname === this.props.cdnUrl) {
@@ -58,9 +57,9 @@ var UI = React.createClass({
     }).bind(this));
 
     return (
-      <ReactCSSTransitionGroup transitionName="window" component={React.DOM.div} className="page">
+      <div className="page">
         {tinyBoxes}
-      </ReactCSSTransitionGroup>
+      </div>
     );
   }
 
