@@ -13,6 +13,7 @@ var UI = React.createClass({
       boxHeight: 1,
       baseColors: [
         [52, 152, 219], // blue
+        [211, 84, 0], // deep orange
         [38, 194, 129], // green
         [155, 89, 182], // purple
         [231, 76, 60], // red
@@ -22,7 +23,6 @@ var UI = React.createClass({
         [41, 105, 176], // navy
         [243, 156, 18], // deep yellow
         [255, 176, 242], // pink
-        [211, 84, 0], // deep orange
         [65, 92, 113], // deep navy
         [124, 169, 81], // deep lime
         [235, 126, 127], // salmon

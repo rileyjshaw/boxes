@@ -14,5 +14,5 @@
 # TECHNOLOGY COLOPHON
 
     HTML5, CSS3, React, Gulp
-    Node, sockjs, Redis
-    GitHub Pages, Mango Smoothies
+    Node, socket.io
+    GitHub Pages, Pour-over coffee
