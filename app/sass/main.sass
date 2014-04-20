@@ -1,4 +1,4 @@
-html
+html, body, #app-container, .page
   height: 100%
   overflow: hidden
 
@@ -18,119 +18,38 @@ body, input, select, textarea, button
   width: 240px
   margin: -120px
   text-align: center
+  text-transform: uppercase
   color: #ccc
 
-.window-enter, .window-leave
-  transition: left 0.3s linear, right 0.3s linear
-
-.window-enter
-  &.throne-page
-    right: 100%
-    &.window-enter-active
-      right: 0
-
-  &.score-page
-    left: 100%
-    &.window-enter-active
-      left: 0
-
-.window-leave
-  &.throne-page
-    right: 0
-    &.window-leave-active
-      right: 100%
-
-  &.score-page
-    left: 0
-    &.window-leave-active
-      left: 100%
-
-.throne-page, .score-page
-  box-sizing: border-box
-  position: absolute
-  height: 100%
-  width: 100%
-  border: 16px solid black
-  text-align: center
-
-.page-link
-  position: absolute
-  bottom: 2px
-  right: 2px
-  padding: .4em
+.tinyBox
+  position: relative
+  float: left
+  height: 33.33333333%
+  width: 33.33333333%
   cursor: pointer
-  color: white
-  background: black
+  font-size: 30px
+  color: #3498db + #444
+  background-color: #3498db
 
-h1, .mid, p
+form
   position: absolute
-  width: 100%
+  bottom: 0
 
-h1, .mid, input, .page-link, .loading
-  text-transform: uppercase
+input, button
+  line-height: 60px
+  margin: 0
+  padding: 0
+  border: 0
+  outline: 0
+  font-size: 30px
+  background-color: #3498db - #222
 
-h1
-  $size: 42px
-  top: 25%
-  line-height: $size
-  margin-top: -$size / 2
-  font-size: $size
-  font-weight: normal
+input
+  width: 86%
+  padding-right: 12%
+  padding-left: 2%
 
-.mid
-  $size: 120px
-  top: 50%
-  height: $size
-  line-height: $size
-  margin-top: -$size / 2
-  font-size: $size
-
-  h2
-    margin: 0
-    font-size: 1em
-    cursor: pointer
-
-  form
-    input, button
-      box-sizing: border-box
-      height: $size
-      width: 36% // button overrides this
-      border: 1px solid black
-      outline: none
-      vertical-align: top
-      font-size: $size / 2
-
-    input
-      min-width: 400px
-      padding-left: 48px
-
-    ::placeholder
-      text-transform: none
-
-    button
-      width: $size
-      padding: 0
-      cursor: pointer
-      text-align: center
-      color: white
-      background-color: black
-
-      img
-        height: 96px
-        margin: 12px
-
-.throne-page p
-  $size: 42px
-  top: 75%
-  line-height: $size
-  margin-top: -$size / 2
-  font-size: $size
-
-table
-  height: 100%
-  width: 60%
-  margin: 0 auto
-  font-size: 24px
-
-td
-  width: 50%
+button
+  position: absolute
+  right: 0
+  width: 10%

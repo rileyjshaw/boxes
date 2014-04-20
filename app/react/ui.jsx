@@ -7,12 +7,19 @@ var UI = React.createClass({
   getInitialState: function() {
     return {
       page: '1',
+      activeBox: 1,
       boxCount: 1,
-      messages: ['Welcome', 'to', 'tinybox.es']
+      messages: ['Welcome', 'to', 'tinybox.es', 'we', 'hope', 'you', 'enjoy', 'your', 'stay']
     };
   },
   handlePageChange: function(page) {
     this.setState({ page: page });
+  },
+  setFocus: function(index) {
+    this.setState({activeBox: index});
+  },
+  handleSubmit: function(message) {
+    this.socket.emit('setMessage', message);
   },
   componentDidMount: function() {
     if(window.location.hostname === this.props.cdnUrl) {
@@ -44,14 +51,14 @@ var UI = React.createClass({
     }
   },
   render: function() {
-    var tinyBoxes = this.state.messages.map(function(message) {
+    var tinyBoxes = this.state.messages.map((function(message, index) {
       return (
-        <TinyBox message={message} />
+        <TinyBox index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{message}</TinyBox>
       );
-    });
+    }).bind(this));
 
     return (
-      <ReactCSSTransitionGroup transitionName="window" component={React.DOM.div}>
+      <ReactCSSTransitionGroup transitionName="window" component={React.DOM.div} className="page">
         {tinyBoxes}
       </ReactCSSTransitionGroup>
     );

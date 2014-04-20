@@ -1,72 +1,37 @@
 var React = require('react/addons');
-var Shared = require('./shared.jsx');
-var PageLink = Shared.PageLink;
 
 var TinyBox = React.createClass({
   handlePageChange: function(page) {
     this.props.onPageChange(page);
   },
-  handleMessageSubmit: function(message){
-    if (message !== this.props.message) {
-      this.props.socket.emit('setMessage', message);
-    }
+  handleFocus: function() {
+    this.props.handleFocus(this.props.index);
   },
   render: function() {
     return (
-      <div className="throne-page">
-        <h1>Owner of this website:</h1>
-        <TinyBoxInner name={this.props.name} onNameSubmit={this.handleNameSubmit} />
-        <p>{+this.props.initialScore + this.props.secondsElapsed}s</p>
-        <PageLink onPageChange={this.handlePageChange} page="scores">High Scores</PageLink>
-      </div>
-    );
-  }
-});
+      <div className="tinyBox" onClick={this.handleFocus}>
+        <p>{this.props.children}</p>
 
-var TinyBoxInner = React.createClass({
-  getInitialState: function() {
-    return { formVisible: 0 };
-  },
-  handleNameSubmit: function(name) {
-    this.toggleFormDisplay();
-    this.props.onNameSubmit(name);
-  },
-  handleBlur: function(element) {
-    //jumping through hoops because blur event might trigger
-    //before submit, which kills the form when the submit
-    //button is clicked
-    setTimeout(function() {
-      if(!element.contains(document.activeElement)) {
-        this.toggleFormDisplay();
-      }
-    }.bind(this), 1);
-  },
-  toggleFormDisplay: function() {
-    this.setState({ formVisible: 1 - this.state.formVisible });
-  },
-  render: function() {
-    return (
-      <div className="mid">
-        { this.state.formVisible
-          ? <ChallengerForm onNameSubmit={this.handleNameSubmit} handleBlur={this.handleBlur} />
-          : <h2 onClick={this.toggleFormDisplay}>{this.props.name}</h2>
+        {this.props.active
+          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.props.handleSubmit} currentMsg={this.props.children} />
+          : false
         }
       </div>
     );
   }
 });
 
-var ChallengerForm = React.createClass({
-  getInitialState: function() {
-    return {value: ''};
-  },
+var InputForm = React.createClass({
   componentDidMount: function() {
     key.setScope('input');
     key.filter = function filter(event){
       return true;
     };
-    key('esc', this.props.handleBlur);
-    this.refs.challenger.getDOMNode().focus();
+    key('esc', (function() {
+      this.props.handleFocus(-1);
+    }).bind(this));
+
+    this.refs.msgInput.getDOMNode().focus();
   },
   componentWillUnmount: function() {
     key.setScope('all');
@@ -76,31 +41,24 @@ var ChallengerForm = React.createClass({
     };
     key.unbind('esc', this.props.handleBlur);
   },
-  handleBlur: function() {
-    //jumping through hoops (part 2)
-    this.props.handleBlur(this.refs.form.getDOMNode());
-  },
-  handleChange: function(event) {
-    this.setState({value: event.target.value.substr(0, 12)});
-  },
-  handleNameSubmit: function() {
-    var challengerNode = this.refs.challenger.getDOMNode();
-    var challenger = challengerNode.value.trim();
-    if (!challenger || typeof challenger !== 'string') {
-      return false;
+  handleSubmit: function() {
+    var msgInputNode = this.refs.msgInput.getDOMNode();
+    var msgInput = msgInputNode.value.trim();
+    if(msgInput !== this.props.currentMsg) {
+      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 30) {
+        console.log('There was an issue with your input');
+      } else {
+        this.props.handleSubmit(msgInput);
+      }
     }
-    this.props.onNameSubmit(challenger);
-    this.refs.challenger.getDOMNode().value = '';
+    msgInputNode.value = '';
     return false;
   },
   render: function() {
-
     return (
-      <form className="challengerForm" onBlur={this.handleBlur} onSubmit={this.handleNameSubmit} ref="form" >
-        <input type="text" placeholder="Take it over" ref="challenger" value={this.state.value} onChange={this.handleChange} />
-        <button type="submit" value="Go" >
-          <img src="img/crown.svg" alt="Crown" />
-        </button>
+      <form className="messageForm" onSubmit={this.handleSubmit} ref="form">
+        <input type="text" ref="msgInput" maxlength="30" />
+        <button type="submit" value="Go">➔</button>
       </form>
     );
   }
