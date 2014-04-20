@@ -5,12 +5,15 @@ var TinyBox = require('./tinybox.jsx');
 var UI = React.createClass({
   getInitialState: function() {
     return {
-      activeBox: -1,
-      boxCount: 2,
-      messages: [['', 0], ['', 0]],
-      baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
+      activeBox: 0,
+      boxCount: 1,
+      boxSqrt: 1,
+      messages: [['', 0]],
+      boxWidth: 1,
+      boxHeight: 1,
+      baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
       grays: [], // set in componentWillMount
-      lockTime: 18,
+      lockTime: 48,
       locks: [false]
     };
   },
@@ -68,8 +71,21 @@ var UI = React.createClass({
         newMessages[index] = [message, 0];
         this.setState({messages: newMessages});
       }).bind(this));
-      this.socket.on('updateMessages', (function (messages) {
-        this.setState({boxCount: messages.length, messages: messages});
+      this.socket.on('updateMessages', (function (messages, locks) {
+        var width, height, messageLength = messages.length;
+        if(messageLength === 1) {
+          width = 1;
+          height = 1;
+        } else {
+          base2Log = Math.log(messageLength) / Math.log(2);
+          width = base2Log;
+          height = base2Log;
+          // if the log is odd, width needs to be double height
+          if (base2Log % 2) {
+            height = ++width / 2;
+          }
+        }
+        this.setState({boxCount: messages.length, locks: locks, messages: messages, boxWidth: width, boxHeight: height});
         if (!this.timer) {
           this.timer = setInterval(this.tick, 1000);
           this.tick();
@@ -83,6 +99,9 @@ var UI = React.createClass({
   },
   render: function() {
     var tinyBoxes = this.state.messages.map((function(messagePair, index) {
+      var width = 100 / this.state.boxWidth + '%';
+      var height = 100 / this.state.boxHeight + '%';
+
       return (
         // if it's the first one, keep it open forever
         index === 0
@@ -93,11 +112,18 @@ var UI = React.createClass({
             active={this.state.activeBox === index}
             handleFocus={this.setFocus}
             handleSubmit={this.handleSubmit}
+            boxWidth={width}
+            boxHeight={height}
           >{messagePair[0]}</TinyBox>
           // otherwise, decide whether it's a lock or a tinybox and include fade params
           : this.state.locks[index]
-            ? <div className="lockedBox"
-              style={{backgroundColor: 'rgb(' + this.state.grays[index] + ', ' + this.state.grays[index] + ', ' + this.state.grays[index] + ')'}} />
+            ? <div className="lockedBox" style={{
+              backgroundColor: 'rgb(' + this.state.grays[index] + ', '
+                + this.state.grays[index] + ', '
+                + this.state.grays[index] + ')',
+              width: width,
+              height: height
+            }} />
             : <TinyBox
               lockTime={this.state.lockTime}
               baseColor={this.state.baseColors[index]}
@@ -107,12 +133,14 @@ var UI = React.createClass({
               handleFocus={this.setFocus}
               handleSubmit={this.handleSubmit}
               gray={this.state.grays[index]}
+              boxWidth={width}
+              boxHeight={height}
             >{messagePair[0]}</TinyBox>
       );
     }).bind(this));
 
     return (
-      <div className="page">
+      <div className={'page boxes' + this.state.boxCount}>
         {tinyBoxes}
       </div>
     );

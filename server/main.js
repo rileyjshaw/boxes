@@ -1,16 +1,24 @@
 var io = require('socket.io').listen(8002);
+
+var MAX_BOXES = 16; // boxes
+var LOCK_TIME = 48; // seconds
+var ADD_CYCLE_RATE = 5; // how many seconds between checking if we should add more boxes
+var ADD_INCOMING_RATE = 3; // rate per second that messages need to arrive since the last check to call addBox()
+
 var newConnections = [];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
-var boxCount = 4;
-var messages = [['', 0], ['', 0], ['', 0], ['', 0]];
+var boxCount = 1;
+var messages = [['', 0]];
 var locks = [];
 var lockCount = 0;
+var cycleCounter = 0;
+var messageCounter = 0;
 
 var fadeClock = setInterval(function() {
   // Lock a box if it has been inactive for 180s
   var lockHandler = function(message, index) {
-    if (++message[1] === 18) {
+    if (++message[1] === LOCK_TIME) {
       locks[index] = true;
       // Downsize if half of the boxes are locked
       if (++lockCount === boxCount / 2) {
@@ -26,16 +34,51 @@ var fadeClock = setInterval(function() {
         locks = [];
         lockCount = 0;
 
-        io.sockets.emit('updateMessages', messages);
+        io.sockets.emit('updateMessages', messages, locks);
         return true;
       }
     }
   };
 
+  var addHandler = function() {
+    var lockedBoxIndex, newMessages = [], i = -1;
+    // if there's no room left, make more boxes
+    if (!lockCount) {
+      if(boxCount === MAX_BOXES) {
+        return;
+      } else {
+        lockCount = boxCount;
+        boxCount *= 2;
+        messages.push(['Brand new!', 0]);
+        // always keep the main box in the top left and distribute the new locked boxes
+        // TODO: linear at front right now but random would be nicer
+        for (var i = 0; i < boxCount; i++) {
+          if (i < messages.length) { // active in even slots
+            newMessages.push(messages[i]);
+          } else { // locked in odd slots
+            locks[i] = true;
+            newMessages.push(['', 0]);
+          }
+        }
+        messages = newMessages;
+      }
+    // if there are locked boxes, unlock a random one and use it
+    } else {
+      lockedBoxIndex = Math.floor(Math.random() * lockCount + 1);
+      while (lockedBoxIndex) {
+        if(locks[++i] === true) lockedBoxIndex--;
+      }
+      messages[i] = ['Brand new!', 0];
+      locks[i] = false;
+    }
+    lockCount--;
+    io.sockets.emit('updateMessages', messages, locks);
+  };
+
   var i = newConnections.length;
   // Start a synchronized timer for all the new connections
   while(i--) {
-    newConnections.pop().emit('updateMessages', messages);
+    newConnections.pop().emit('updateMessages', messages, locks);
   }
 
   var b = true;
@@ -44,6 +87,12 @@ var fadeClock = setInterval(function() {
       b = lockHandler(messages[i], i);
       if (b) break;
     }
+  }
+
+  cycleCounter++;
+  if(!(cycleCounter %= ADD_CYCLE_RATE) && messageCounter / boxCount / ADD_CYCLE_RATE > ADD_INCOMING_RATE) {
+    messageCounter = 0;
+    addHandler();
   }
 
   // Clear the spam checker
@@ -96,6 +145,7 @@ function setMessage(index, message, socket) {
   } else {
     messages[index] = [message, 0];
     io.sockets.emit('updateMessage', index, message);
+    messageCounter++;
   }
 
   if (socket.superStrikes >= 3) {

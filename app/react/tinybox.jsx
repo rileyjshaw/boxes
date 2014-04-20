@@ -45,6 +45,8 @@ var TinyBox = React.createClass({
     return (
       <div className="tinyBox" onClick={this.setFocusToSelf} style={
         {
+          height: this.props.boxHeight,
+          width: this.props.boxWidth,
           color: 'rgb(' + lightColor + ')',
           backgroundColor: 'rgb(' + baseColor + ')'
         }
@@ -97,13 +99,13 @@ var InputForm = React.createClass({
     key.unbind('esc', this.props.handleBlur);
   },
   handleChange: function(event) {
-    this.setState({value: event.target.value.substr(0, 59)});
+    this.setState({value: event.target.value.substr(0, 47)});
   },
   handleSubmit: function() {
     var msgInputNode = this.refs.msgInput.getDOMNode();
     var msgInput = msgInputNode.value.trim();
     if(msgInput !== this.props.currentMsg) {
-      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 60) {
+      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 48) {
         console.log('There was an issue with your input');
       } else {
         this.props.handleSubmit(msgInput);
