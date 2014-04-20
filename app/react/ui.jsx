@@ -19,6 +19,9 @@ var UI = React.createClass({
   },
   tick: function() {
     var newMessages = this.state.messages;
+    newMessages.map(function(pair) {
+      pair[1]++;
+    });
     this.setState({messages: newMessages})
   },
   componentDidMount: function() {

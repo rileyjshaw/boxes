@@ -20,7 +20,10 @@ var TinyBox = React.createClass({
     });
   },
   render: function() {
-    var baseColor = this.props.baseColor; //[(this.props.baseColor[0] + this.state.gray) / 2, (this.props.baseColor[1] + this.state.gray) / 2, (this.props.baseColor[2] + this.state.gray) / 2];
+    var baseColor = this.props.baseColor.map((function(value) {
+      var fade = this.props.fade;
+      return fade > 180 ? this.state.gray : Math.floor(((180 - fade) * value + fade * this.state.gray) / 180);
+    }).bind(this));
     var lightColor = this.colorShift(baseColor, 48);
     var darkColor = this.colorShift(baseColor, -48);
     var superDarkColor = this.colorShift(baseColor, -160);
