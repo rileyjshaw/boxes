@@ -1,21 +1,50 @@
 var io = require('socket.io').listen(8002);
 var newConnections = [];
-var messages = [['', 0]];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
+var boxCount = 4;
+var messages = [['', 0], ['', 0], ['', 0], ['', 0]];
+var locks = [];
+var lockCount = 0;
 
 var fadeClock = setInterval(function() {
-  var i = newConnections.length;
+  // Lock a box if it has been inactive for 180s
+  var lockHandler = function(message, index) {
+    if (++message[1] === 18) {
+      locks[index] = true;
+      // Downsize if half of the boxes are locked
+      if (++lockCount === boxCount / 2) {
+        var newMessages = [];
+        messages.forEach(function(message, index) {
+          if (!locks[index]) {
+            newMessages.push(message);
+          }
+        });
+        // reset globals
+        messages = newMessages;
+        boxCount /= 2;
+        locks = [];
+        lockCount = 0;
 
+        io.sockets.emit('updateMessages', messages);
+        return true;
+      }
+    }
+  };
+
+  var i = newConnections.length;
   // Start a synchronized timer for all the new connections
   while(i--) {
     newConnections.pop().emit('updateMessages', messages);
   }
 
-  //TODO: Handle fades
-  messages.forEach(function(message) {
-    message[1]++;
-  });
+  var b = true;
+  while (b) {
+    for(i = 0; i < boxCount; i++) {
+      b = lockHandler(messages[i], i);
+      if (b) break;
+    }
+  }
 
   // Clear the spam checker
   ipSpamChecker = {};
@@ -52,7 +81,10 @@ function setMessage(index, message, socket) {
     }
   } else ++ipSpamChecker[socket.ipAddress];
 
-  if (typeof message !== 'string') {
+  if (locks[index]) {
+    socket.emit('news', 'That box seems to be locked right now.');
+    socket.superStrikes += 0.5;
+  } else if (typeof message !== 'string') {
     socket.emit('news', 'Your message should be a string.');
     socket.superStrikes++;
   } else if(message.length > 60) {

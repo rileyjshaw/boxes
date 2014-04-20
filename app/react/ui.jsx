@@ -10,7 +10,7 @@ var UI = React.createClass({
       messages: [['', 0], ['', 0]],
       baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
       grays: [], // set in componentWillMount
-      lockTime: 180,
+      lockTime: 18,
       locks: [false]
     };
   },
@@ -69,7 +69,7 @@ var UI = React.createClass({
         this.setState({messages: newMessages});
       }).bind(this));
       this.socket.on('updateMessages', (function (messages) {
-        this.setState({messages: messages});
+        this.setState({boxCount: messages.length, messages: messages});
         if (!this.timer) {
           this.timer = setInterval(this.tick, 1000);
           this.tick();
