@@ -20,7 +20,11 @@ var UI = React.createClass({
   handleSubmit: function(index, message) {
     this.socket.emit('setMessage', index, message);
   },
+  tick: function()
   componentDidMount: function() {
+    var timer = setInterval(this.tick, 1000);
+    this.tick();
+
     if(window.location.hostname === this.props.cdnUrl) {
       // extend io.connect to add a news listener to all new connections
       io.connect = (function(originalFunction) {
@@ -42,6 +46,10 @@ var UI = React.createClass({
       }).bind(this));
       this.socket.on('updateMessages', (function (messages) {
         this.setState({messages: messages});
+        if(!this.timer) {
+          this.timer = setInterval(this.tick, 1000);
+          this.tick();
+        }
       }).bind(this));
     } else {
       throw new Error('window.location.hostname is ' + window.location.hostname +

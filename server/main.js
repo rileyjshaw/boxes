@@ -1,10 +1,21 @@
 var io = require('socket.io').listen(8002);
-var messages = ['Welcome', 'to', 'tinybox.es', 'we', 'hope', 'you', 'enjoy', 'your', 'stay'];
+var newConnections = [];
+var messages = [{}];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
 
 var fadeClock = setInterval(function() {
+  var i = newConnections.length;
+
+  // Start a synchronized timer for all the new connections
+  while(i--) {
+    newConnections.pop().emit('updateMessages', messages);
+  }
+
   //TODO: Handle fades
+  messages.forEach(function(message) {
+    message.fade++;
+  });
 
   // Clear the spam checker
   ipSpamChecker = {};
@@ -64,7 +75,7 @@ function setMessage(index, message, socket) {
 io.sockets.on('connection', function(socket) {
   socket.superStrikes = 0;
   socket.ipAddress = socket.handshake.address.address;
-  socket.emit('updateMessages', messages);
+  newConnections.push(socket);
 
   socket.on('setMessage', function(index, message) {
     setMessage(index, message, socket);
