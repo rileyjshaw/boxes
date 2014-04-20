@@ -1,14 +1,14 @@
 {
-  "name": "own-this-website-tests",
-  "version": "1.0.1",
-  "description": "An online game of king of the hill",
+"name": "tiny-boxes-test",
+  "version": "0.1.0",
+  "description": "Chat through happenstance",
   "main": "main.js",
   "scripts": {
     "test": "gulp test"
   },
-  "repository": "https://github.com/rileyjshaw/own-this-website.git",
+  "repository": "https://github.com/rileyjshaw/boxes.git",
   "keywords": [
-    "king, hill, own, this, website, high, score, game"
+    "chat", "tiny", "boxes", "sockets"
   ],
   "author": "rileyjshaw",
   "license": "BSD-2-Clause",

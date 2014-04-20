@@ -1,10 +1,10 @@
 {
-  "name": "own-this-website-client",
-  "version": "1.0.1",
-  "description": "Unbuilt client assets",
+  "name": "tiny-boxes-client",
+  "version": "0.1.0",
+  "description": "Chat through happenstance",
   "main": "gulpfile.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cd .. && mocha"
   },
   "keywords": [
     "client",

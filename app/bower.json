@@ -1,22 +1,19 @@
 {
-  "name": "own-this-website-client",
-  "version": "1.0.1",
-  "homepage": "https://github.com/rileyjshaw/own-this-website",
+  "name": "tiny-boxes",
+  "version": "0.1.0",
   "authors": [
     "Riley Shaw <rileyjshaw@gmail.com>"
   ],
-  "description": "An experimental, King of the Hill style game",
+  "description": "Chat through happenstance",
+  "homepage": "https://github.com/rileyjshaw/boxes",
   "moduleType": [
     "node"
   ],
   "keywords": [
-    "game",
-    "sockets",
-    "king",
-    "of",
-    "the",
-    "hill",
-    "own"
+    "chat",
+    "tiny",
+    "boxes",
+    "sockets"
   ],
   "license": "MIT",
   "private": true,
