@@ -20,13 +20,27 @@ var TinyBox = React.createClass({
     });
   },
   render: function() {
+    var gray = this.state.gray;
+    var fade = this.props.fade;
+    var lockTime = this.props.lockTime;
+    var lockBreakpoint = lockTime * 2 / 3;
+    var lockRemainder = lockTime - lockBreakpoint;
+
+    var shiftVal = fade < lockBreakpoint
+      ? 48
+      : Math.floor(48 * (1 - (fade - lockBreakpoint) / lockRemainder));
+
     var baseColor = this.props.baseColor.map((function(value) {
-      var fade = this.props.fade;
-      return fade > 180 ? this.state.gray : Math.floor(((180 - fade) * value + fade * this.state.gray) / 180);
+      return fade < lockBreakpoint
+        ? Math.floor(((lockBreakpoint - fade) * value + fade * gray) / lockBreakpoint)
+        : Math.floor(((lockTime - fade) * gray + (fade - lockBreakpoint) * 48) / lockRemainder);
     }).bind(this));
-    var lightColor = this.colorShift(baseColor, 48);
-    var darkColor = this.colorShift(baseColor, -48);
-    var superDarkColor = this.colorShift(baseColor, -160);
+
+    console.log(shiftVal, baseColor);
+
+    var lightColor = this.colorShift(baseColor, shiftVal);
+    var darkColor = this.colorShift(baseColor, -shiftVal);
+    var superDarkColor = this.colorShift(baseColor, -shiftVal * 3);
 
     return (
       <div className="tinyBox" onClick={this.setFocusToSelf} style={

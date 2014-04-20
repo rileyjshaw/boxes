@@ -9,6 +9,7 @@ var UI = React.createClass({
       boxCount: 1,
       messages: [['', 0]],
       baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
+      lockTime: 30,
       locks: [false],
       lockIndices: []
     };
@@ -42,9 +43,9 @@ var UI = React.createClass({
   },
   tick: function() {
     var newMessages = this.state.messages;
-    // increment fade counters and lock any boxes that have been inactive for 180s
+    // increment fade counters and lock any boxes that have been inactive for lockTime seconds
     newMessages.map((function(pair, index) {
-      if (++pair[1] === 10) {
+      if (++pair[1] >= this.state.lockTime) {
         this.lockBox(index);
       }
     }).bind(this));
@@ -88,7 +89,15 @@ var UI = React.createClass({
       return (
         this.state.locks[index]
           ? <div className="lockedBox" />
-          : <TinyBox baseColor={this.state.baseColors[index]} fade={messagePair[1]} index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{messagePair[0]}</TinyBox>
+          : <TinyBox
+            lockTime={this.state.lockTime}
+            baseColor={this.state.baseColors[index]}
+            fade={messagePair[1]}
+            index={index}
+            active={this.state.activeBox === index}
+            handleFocus={this.setFocus}
+            handleSubmit={this.handleSubmit}
+          >{messagePair[1]}</TinyBox>
       );
     }).bind(this));
 
