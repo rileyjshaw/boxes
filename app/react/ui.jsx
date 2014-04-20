@@ -6,8 +6,8 @@ var UI = React.createClass({
   getInitialState: function() {
     return {
       activeBox: -1,
-      boxCount: 1,
-      messages: [['', 0]],
+      boxCount: 2,
+      messages: [['', 0], ['', 0]],
       baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]],
       grays: [], // set in componentWillMount
       lockTime: 180,
@@ -84,19 +84,30 @@ var UI = React.createClass({
   render: function() {
     var tinyBoxes = this.state.messages.map((function(messagePair, index) {
       return (
-        this.state.locks[index]
-          ? <div className="lockedBox"
-            style={{backgroundColor: 'rgb(' + this.state.grays[index] + ', ' + this.state.grays[index] + ', ' + this.state.grays[index] + ')'}} />
-          : <TinyBox
-            lockTime={this.state.lockTime}
+        // if it's the first one, keep it open forever
+        index === 0
+          ? <TinyBox
+            permanent={true}
             baseColor={this.state.baseColors[index]}
-            fade={messagePair[1]}
             index={index}
             active={this.state.activeBox === index}
             handleFocus={this.setFocus}
             handleSubmit={this.handleSubmit}
-            gray={this.state.grays[index]}
-          >{messagePair[1]}</TinyBox>
+          >{messagePair[0]}</TinyBox>
+          // otherwise, decide whether it's a lock or a tinybox and include fade params
+          : this.state.locks[index]
+            ? <div className="lockedBox"
+              style={{backgroundColor: 'rgb(' + this.state.grays[index] + ', ' + this.state.grays[index] + ', ' + this.state.grays[index] + ')'}} />
+            : <TinyBox
+              lockTime={this.state.lockTime}
+              baseColor={this.state.baseColors[index]}
+              fade={messagePair[1]}
+              index={index}
+              active={this.state.activeBox === index}
+              handleFocus={this.setFocus}
+              handleSubmit={this.handleSubmit}
+              gray={this.state.grays[index]}
+            >{messagePair[0]}</TinyBox>
       );
     }).bind(this));
 

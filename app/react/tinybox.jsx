@@ -17,23 +17,26 @@ var TinyBox = React.createClass({
     });
   },
   render: function() {
-    var gray = this.props.gray;
-    var fade = this.props.fade;
-    var lockTime = this.props.lockTime;
-    var lockBreakpoint = lockTime * 2 / 3;
-    var lockRemainder = lockTime - lockBreakpoint;
+    if (!this.props.permanent) {
+      var gray = this.props.gray;
+      var fade = this.props.fade;
+      var lockTime = this.props.lockTime;
+      var lockBreakpoint = lockTime * 2 / 3;
+      var lockRemainder = lockTime - lockBreakpoint;
 
-    var shiftVal = fade < lockBreakpoint
-      ? 48
-      : Math.floor(48 * (1 - (fade - lockBreakpoint) / lockRemainder));
+      var shiftVal = fade < lockBreakpoint
+        ? 48
+        : Math.floor(48 * (1 - (fade - lockBreakpoint) / lockRemainder));
 
-    var baseColor = this.props.baseColor.map((function(value) {
-      return fade < lockBreakpoint
-        ? Math.floor(((lockBreakpoint - fade) * value + fade * gray) / lockBreakpoint)
-        : gray;
-    }).bind(this));
-
-    console.log(shiftVal, baseColor);
+      var baseColor = this.props.baseColor.map((function(value) {
+        return fade < lockBreakpoint
+          ? Math.floor(((lockBreakpoint - fade) * value + fade * gray) / lockBreakpoint)
+          : gray;
+      }).bind(this));
+    } else {
+      var baseColor = this.props.baseColor;
+      var shiftVal = 48;
+    }
 
     var lightColor = this.colorShift(baseColor, shiftVal);
     var darkColor = this.colorShift(baseColor, -shiftVal);
