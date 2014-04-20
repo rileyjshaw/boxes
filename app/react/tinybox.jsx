@@ -1,6 +1,9 @@
-var React = require('react');
+var React = require('react/addons');
 
 var TinyBox = React.createClass({
+  getInitialState: function() {
+    return {gray: (this.props.baseColor[0] + this.props.baseColor[1] + this.props.baseColor[2]) / 3};
+  },
   handleFocus: function(index) {
     this.props.handleFocus(index);
   },
@@ -10,13 +13,33 @@ var TinyBox = React.createClass({
   handleSubmit: function(message) {
     this.props.handleSubmit(this.props.index, message);
   },
+  colorShift: function(base, amount) {
+    return base.map(function(value) {
+      return Math.min(255, Math.max(0, value + amount));
+    });
+  },
   render: function() {
+    var baseColor = this.props.baseColor; //[(this.props.baseColor[0] + this.state.gray) / 2, (this.props.baseColor[1] + this.state.gray) / 2, (this.props.baseColor[2] + this.state.gray) / 2];
+    var lightColor = this.colorShift(baseColor, 48);
+    var darkColor = this.colorShift(baseColor, -48);
+    var superDarkColor = this.colorShift(baseColor, -160);
+
     return (
-      <div className="tinyBox" onClick={this.setFocusToSelf}>
+      <div className="tinyBox" onClick={this.setFocusToSelf} style={
+        {
+          color: 'rgb(' + lightColor + ')',
+          backgroundColor: 'rgb(' + baseColor + ')'
+        }
+      }>
         <p>{this.props.children}</p>
 
         {this.props.active
-          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} />
+          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} style={
+            {
+              color: 'rgb(' + superDarkColor + ')',
+              backgroundColor: 'rgb(' + darkColor + ')'
+            }
+          }/>
           : false
         }
       </div>
@@ -66,8 +89,8 @@ var InputForm = React.createClass({
   render: function() {
     return (
       <form className="messageForm" onSubmit={this.handleSubmit} ref="form">
-        <input type="text" ref="msgInput" onChange={this.handleChange} value={this.state.value} />
-        <button type="submit">➔</button>
+        <input type="text" ref="msgInput" onChange={this.handleChange} value={this.state.value} style={this.props.style} />
+        <button type="submit" style={this.props.style}>➔</button>
       </form>
     );
   }

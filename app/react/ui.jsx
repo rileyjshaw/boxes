@@ -7,7 +7,8 @@ var UI = React.createClass({
     return {
       activeBox: -1,
       boxCount: 1,
-      messages: [['', 0]]
+      messages: [['', 0]],
+      baseColors: [[52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219], [52, 152, 219]]
     };
   },
   setFocus: function(index) {
@@ -19,8 +20,7 @@ var UI = React.createClass({
   tick: function() {
     var newMessages = this.state.messages;
     newMessages.forEach(function(pair) {
-      console.log(pair);
-      pair[1]++;
+      console.log(pair[1]++);
     });
     this.setState({messages: newMessages})
   },
@@ -60,7 +60,7 @@ var UI = React.createClass({
   render: function() {
     var tinyBoxes = this.state.messages.map((function(messagePair, index) {
       return (
-        <TinyBox index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{messagePair[0] + messagePair[1]}</TinyBox>
+        <TinyBox baseColor={this.state.baseColors[index]} fade={messagePair[1]} index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{messagePair[0]}</TinyBox>
       );
     }).bind(this));
 
