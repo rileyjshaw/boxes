@@ -1,14 +1,14 @@
-var
-React = require('react/addons'),
-ReactCSSTransitionGroup = React.addons.CSSTransitionGroup,
-Page = require('./page.jsx');
+var React = require('react/addons');
+var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+var TinyBox = require('./tinybox.jsx');
 
 var UI = React.createClass({
   getInitialState: function() {
     return {
       page: '1',
       boxCount: 1,
-      messages: [['']]
+      messages: ['Welcome', 'to', 'tinybox.es']
     };
   },
   handlePageChange: function(page) {
@@ -46,7 +46,7 @@ var UI = React.createClass({
   render: function() {
     var tinyBoxes = this.state.messages.map(function(message) {
       return (
-        <tinyBox message={message}>
+        <TinyBox message={message} />
       );
     });
 

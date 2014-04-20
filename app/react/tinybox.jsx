@@ -2,21 +2,20 @@ var React = require('react/addons');
 var Shared = require('./shared.jsx');
 var PageLink = Shared.PageLink;
 
-var tinyBox = React.createClass({
+var TinyBox = React.createClass({
   handlePageChange: function(page) {
     this.props.onPageChange(page);
   },
-  handleNameSubmit: function(name){
-    name = name.toUpperCase();
-    if (name !== this.props.name) {
-      this.props.socket.emit('setKing', name);
+  handleMessageSubmit: function(message){
+    if (message !== this.props.message) {
+      this.props.socket.emit('setMessage', message);
     }
   },
   render: function() {
     return (
       <div className="throne-page">
         <h1>Owner of this website:</h1>
-        <ThroneMid name={this.props.name} onNameSubmit={this.handleNameSubmit} />
+        <TinyBoxInner name={this.props.name} onNameSubmit={this.handleNameSubmit} />
         <p>{+this.props.initialScore + this.props.secondsElapsed}s</p>
         <PageLink onPageChange={this.handlePageChange} page="scores">High Scores</PageLink>
       </div>
@@ -24,7 +23,7 @@ var tinyBox = React.createClass({
   }
 });
 
-var ThroneMid = React.createClass({
+var TinyBoxInner = React.createClass({
   getInitialState: function() {
     return { formVisible: 0 };
   },
@@ -107,4 +106,4 @@ var ChallengerForm = React.createClass({
   }
 });
 
-module.exports = Throne;
+module.exports = TinyBox;
