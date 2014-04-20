@@ -5,14 +5,10 @@ var TinyBox = require('./tinybox.jsx');
 var UI = React.createClass({
   getInitialState: function() {
     return {
-      page: '1',
       activeBox: -1,
       boxCount: 1,
-      messages: []
+      messages: [['', 0]]
     };
-  },
-  handlePageChange: function(page) {
-    this.setState({ page: page });
   },
   setFocus: function(index) {
     this.setState({activeBox: index});
@@ -20,11 +16,15 @@ var UI = React.createClass({
   handleSubmit: function(index, message) {
     this.socket.emit('setMessage', index, message);
   },
-  tick: function()
+  tick: function() {
+    var newMessages = this.state.messages;
+    newMessages.forEach(function(pair) {
+      console.log(pair);
+      pair[1]++;
+    });
+    this.setState({messages: newMessages})
+  },
   componentDidMount: function() {
-    var timer = setInterval(this.tick, 1000);
-    this.tick();
-
     if(window.location.hostname === this.props.cdnUrl) {
       // extend io.connect to add a news listener to all new connections
       io.connect = (function(originalFunction) {
@@ -41,7 +41,7 @@ var UI = React.createClass({
 
       this.socket.on('updateMessage', (function (index, message) {
         var newMessages = this.state.messages;
-        newMessages[index] = message;
+        newMessages[index] = [message, 0];
         this.setState({messages: newMessages});
       }).bind(this));
       this.socket.on('updateMessages', (function (messages) {
@@ -58,9 +58,9 @@ var UI = React.createClass({
     }
   },
   render: function() {
-    var tinyBoxes = this.state.messages.map((function(message, index) {
+    var tinyBoxes = this.state.messages.map((function(messagePair, index) {
       return (
-        <TinyBox index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{message}</TinyBox>
+        <TinyBox index={index} active={this.state.activeBox === index} handleFocus={this.setFocus} handleSubmit={this.handleSubmit}>{messagePair[0] + messagePair[1]}</TinyBox>
       );
     }).bind(this));
 

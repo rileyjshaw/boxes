@@ -1,6 +1,6 @@
 var io = require('socket.io').listen(8002);
 var newConnections = [];
-var messages = [{}];
+var messages = [['', 0]];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
 
@@ -14,7 +14,7 @@ var fadeClock = setInterval(function() {
 
   //TODO: Handle fades
   messages.forEach(function(message) {
-    message.fade++;
+    message[1]++;
   });
 
   // Clear the spam checker
@@ -58,11 +58,11 @@ function setMessage(index, message, socket) {
   } else if(message.length > 60) {
     socket.emit('news', 'Your message can\'t be more than 60 characters.');
     socket.superStrikes++;
-  } else if(message === messages[index]) {
+  } else if(message === messages[index][0]) {
     socket.emit('news', 'That\'s already the message, yo!');
     socket.superStrikes += 0.3;
   } else {
-    messages[index] = message;
+    messages[index] = [message, 0];
     io.sockets.emit('updateMessage', index, message);
   }
 
