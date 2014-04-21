@@ -32,8 +32,7 @@ var UI = React.createClass({
       boxSqrt: 1,
       messages: [['', 0]],
       boxWidth: 1,
-      boxHeight: 1,
-      lockTime: LOCK_TIME
+      boxHeight: 1
     };
   },
   setFocus: function(index) {
@@ -43,12 +42,13 @@ var UI = React.createClass({
     this.socket.emit('setMessage', index, message);
   },
   tick: function() {
-    var newMessages = this.state.messages;
-    // increment fade counters and lock any boxes that have been inactive for lockTime seconds
-    newMessages.map((function(pair, index) {
-      if (++pair[1] >= this.state.lockTime) {
-        pair = LOCK_MSG;
+    // increment fade counters and lock any boxes that have been inactive for LOCK_TIME seconds
+    var newMessages = this.state.messages.map((function(messagePair, index) {
+      var incMessage = messagePair && [messagePair[0], messagePair[1] + 1];
+      if (incMessage[1] >= LOCK_TIME && index) {
+        incMessage = LOCK_MSG;
       }
+      return incMessage;
     }).bind(this));
     this.setState({messages: newMessages})
   },
@@ -123,10 +123,10 @@ var UI = React.createClass({
             boxHeight={height}
           >{messagePair[0]}</TinyBox>
           // otherwise, decide whether it's a lock or a tinybox and include fade params
-          : this.state.messages[index]
+          : messagePair
             ? <TinyBox
                 key={index}
-                lockTime={this.state.lockTime}
+                lockTime={LOCK_TIME}
                 baseColor={this.baseColors[index]}
                 fade={messagePair[1]}
                 index={index}
