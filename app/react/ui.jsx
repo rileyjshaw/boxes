@@ -65,7 +65,7 @@ var UI = React.createClass({
   },
   componentWillMount: function() {
     this.setState({grays: this.state.baseColors.map(function(color) {
-      return (color[0] + color[1] + color[2]) / 3;
+      return Math.floor((color[0] + color[1] + color[2]) / 3);
     })});
   },
   componentDidMount: function() {
