@@ -3,7 +3,7 @@ var io = require('socket.io').listen(8002);
 var MAX_BOXES = 16; // boxes
 var LOCK_TIME = 48; // seconds
 var ADD_CYCLE_RATE = 5; // how many seconds between checking if we should add more boxes
-var ADD_INCOMING_RATE = 3; // rate per second that messages need to arrive since the last check to call addBox()
+var ADD_INCOMING_RATE = 2; // rate per second (per box) that messages need to arrive since the last check to call addBox()
 var LOCK_MSG = false; // stored in messages[] at a locked index
 
 var newConnections = [];
@@ -92,7 +92,7 @@ var clock = setInterval(function() {
 
   // start the synchronized timer for all new connections
   var i = newConnections.length;
-  while(i--) {
+  while (i--) {
     newConnections.pop().emit('updateMessages', messages);
   }
 
@@ -102,11 +102,13 @@ var clock = setInterval(function() {
   });
   squishBoxes();
 
-  // check if it's blowing up and addBox accordingly
+  // check if it's blowing up and addBox accordingly, then reset messageCount
   cycleCount++;
-  if(!(cycleCount %= ADD_CYCLE_RATE) && messageCount / boxCount / ADD_CYCLE_RATE > ADD_INCOMING_RATE) {
+  if (!(cycleCount %= ADD_CYCLE_RATE)) {
+    if (messageCount / boxCount / ADD_CYCLE_RATE >= ADD_INCOMING_RATE) {
+      addBox();
+    }
     messageCount = 0;
-    addBox();
   }
 
   // clear the spam checker
