@@ -58,7 +58,7 @@ var TinyBox = React.createClass({
         </ReactCSSTransitionGroup>
 
         {this.props.active
-          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} ref="form" style={
+          ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} msgHistory={this.props.msgHistory} ref="form" style={
             {
               color: 'rgb(' + superDarkColor + ')',
               backgroundColor: 'rgb(' + darkColor + ')'
@@ -79,7 +79,10 @@ var MessageBanner = React.createClass({
 
 var InputForm = React.createClass({
   getInitialState: function() {
-    return {value: ''};
+    return {
+      value: '',
+      historyIndex: -1
+    };
   },
   componentDidMount: function() {
     key.setScope('input');
@@ -88,6 +91,27 @@ var InputForm = React.createClass({
     };
     key('esc', (function() {
       this.props.handleFocus(-1);
+    }).bind(this));
+    key('up', (function() {
+      console.log(this.state.historyIndex, this.props.msgHistory);
+      this.setState({
+        historyIndex: Math.min(this.state.historyIndex + 1, this.props.msgHistory.length - 1)
+      });
+      this.setState({
+        value: this.props.msgHistory[this.state.historyIndex] || ''
+      });
+      console.log(this.state.historyIndex, this.props.msgHistory);
+    }).bind(this));
+    key('down', (function() {
+      console.log(this.state.historyIndex, this.props.msgHistory);
+      this.setState({
+        historyIndex: Math.max(this.state.historyIndex - 1, -1)
+      });
+      this.setState({
+        value: this.props.msgHistory[this.state.historyIndex] || ''
+      });
+      console.log(this.state.historyIndex, this.props.msgHistory);
+
     }).bind(this));
 
     this.refs.msgInput.getDOMNode().focus();
@@ -101,19 +125,22 @@ var InputForm = React.createClass({
     key.unbind('esc', this.props.handleBlur);
   },
   handleChange: function(event) {
-    this.setState({value: event.target.value.substr(0, 47)});
+    this.setState({value: event.target.value.substr(0, 60)});
   },
   handleSubmit: function() {
     var msgInputNode = this.refs.msgInput.getDOMNode();
     var msgInput = msgInputNode.value.trim();
     if(msgInput !== this.props.currentMsg) {
-      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 48) {
+      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 60) {
         console.log('There was an issue with your input');
       } else {
         this.props.handleSubmit(msgInput);
       }
     }
-    this.setState({value: ''});
+    this.setState({
+      value: '',
+      historyIndex: -1
+    });
     return false;
   },
   render: function() {

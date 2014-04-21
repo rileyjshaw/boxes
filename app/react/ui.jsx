@@ -32,13 +32,18 @@ var UI = React.createClass({
       boxSqrt: 1,
       messages: [['', 0]],
       boxWidth: 1,
-      boxHeight: 1
+      boxHeight: 1,
+      msgHistory: []
     };
   },
   setFocus: function(index) {
     this.setState({activeBox: index});
   },
   handleSubmit: function(index, message) {
+      // keep the last 60 messages
+    this.setState({
+      msgHistory: [message].concat(this.state.msgHistory).slice(0, 60)
+    });
     this.socket.emit('setMessage', index, message);
   },
   tick: function() {
@@ -121,6 +126,7 @@ var UI = React.createClass({
             handleSubmit={this.handleSubmit}
             boxWidth={width}
             boxHeight={height}
+            msgHistory={this.state.msgHistory}
           >{messagePair[0]}</TinyBox>
           // otherwise, decide whether it's a lock or a tinybox and include fade params
           : messagePair
@@ -136,6 +142,7 @@ var UI = React.createClass({
                 gray={this.grays[index]}
                 boxWidth={width}
                 boxHeight={height}
+                msgHistory={this.state.msgHistory}
               >{messagePair[0]}</TinyBox>
             : <div key={index} className="lockedBox" style={{
                 backgroundColor: 'rgb(' + this.grays[index] + ', '
