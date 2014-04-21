@@ -123,6 +123,7 @@ var UI = React.createClass({
         // if it's the first one, keep it open forever
         index === 0
           ? <TinyBox
+            key={index}
             permanent={true}
             baseColor={this.state.baseColors[index]}
             index={index}
@@ -134,7 +135,7 @@ var UI = React.createClass({
           >{messagePair[0]}</TinyBox>
           // otherwise, decide whether it's a lock or a tinybox and include fade params
           : this.state.locks[index]
-            ? <div className="lockedBox" style={{
+            ? <div key={index} className="lockedBox" style={{
               backgroundColor: 'rgb(' + this.state.grays[index] + ', '
                 + this.state.grays[index] + ', '
                 + this.state.grays[index] + ')',
@@ -142,6 +143,7 @@ var UI = React.createClass({
               height: height
             }} />
             : <TinyBox
+              key={index}
               lockTime={this.state.lockTime}
               baseColor={this.state.baseColors[index]}
               fade={messagePair[1]}
