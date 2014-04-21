@@ -2,6 +2,9 @@ var React = require('react');
 
 var TinyBox = require('./tinybox.jsx');
 
+var LOCK_TIME = 48; // seconds
+var LOCK_MSG = false; // stored in messages[] at a locked index
+
 var UI = React.createClass({
   baseColors: [
     [52, 152, 219], // blue
@@ -30,7 +33,7 @@ var UI = React.createClass({
       messages: [['', 0]],
       boxWidth: 1,
       boxHeight: 1,
-      lockTime: 48
+      lockTime: LOCK_TIME
     };
   },
   setFocus: function(index) {
@@ -44,7 +47,7 @@ var UI = React.createClass({
     // increment fade counters and lock any boxes that have been inactive for lockTime seconds
     newMessages.map((function(pair, index) {
       if (++pair[1] >= this.state.lockTime) {
-        pair[0] = false;
+        pair = LOCK_MSG;
       }
     }).bind(this));
     this.setState({messages: newMessages})

@@ -21,7 +21,7 @@ var clock = setInterval(function() {
   // checking index to ensure we never lock the first box
   function lockBox(message, index) {
     if (++message[1] === LOCK_TIME && index) {
-      message[index] = false;
+      messages[index] = LOCK_MSG;
       lockCount++;
     }
   }
@@ -41,14 +41,15 @@ var clock = setInterval(function() {
       });
       luckyWinner = lockedIndices[Math.floor(Math.random() * lockCount)];
       messages[luckyWinner] = ['Brand new!', 0];
+      lockCount--;
+      io.sockets.emit('updateMessage', luckyWinner, messages[luckyWinner]);
     }
-    lockCount--;
-    io.sockets.emit('updateMessage', luckyWinner, messages[luckyWinner]);
   };
 
   // reduces the box count when at least half of the boxes are locked
   function squishBoxes() {
     var squished = false, newMessages;
+
     while (lockCount >= boxCount / 2) {
       // strip the falses out
       newMessages = messages.filter(Boolean);
@@ -67,14 +68,13 @@ var clock = setInterval(function() {
 
   // called when we need to add a box but there are no locked containers to fill
   function expandBoxes() {
-    if(boxCount === MAX_BOXES) {
-      return;
-    } else {
+    if(boxCount !== MAX_BOXES) {
       lockCount = boxCount - 1;
       boxCount *= 2;
       messages.push(['Brand new!', 0]);
       // always keep the main box in the top left and distribute the new locked boxes
       messages = sparsify(messages, boxCount);
+      io.sockets.emit('updateMessages', messages);
     }
   }
 
