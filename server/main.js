@@ -4,12 +4,12 @@ var MAX_BOXES = 16; // boxes
 var LOCK_TIME = 48; // seconds
 var ADD_CYCLE_RATE = 5; // how many seconds between checking if we should add more boxes
 var ADD_INCOMING_RATE = 3; // rate per second that messages need to arrive since the last check to call addBox()
+var LOCK_MSG = false; // stored in messages[] at a locked index
 
 var newConnections = [];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
 var messages = [['', 0]];
-var locks = [];
 
 var boxCount = 1;
 var lockCount = 0;
@@ -17,78 +17,84 @@ var cycleCount = 0;
 var messageCount = 0;
 
 var clock = setInterval(function() {
-  // Lock a box if it has been inactive for 180s
+  // increment lock counter, then lock it if inactive for 180s
+  // checking index to ensure we never lock the first box
   function lockBox(message, index) {
     if (++message[1] === LOCK_TIME && index) {
-      locks[index] = true;
-      // Downsize if half of the boxes are locked
-      if (++lockCount === boxCount / 2) {
-        var newMessages = [];
-        messages.forEach(function(message, index) {
-          if (!locks[index]) {
-            newMessages.push(message);
-          }
-        });
-        // reset globals
-        messages = newMessages;
-        boxCount /= 2;
-        locks = [];
-        lockCount = 0;
-
-        io.sockets.emit('updateMessages', messages, locks);
-        return true;
-      }
+      message[index] = false;
+      lockCount++;
     }
   }
 
+  // open up a locked box or double the number of boxes
   function addBox() {
-    var lockedBoxIndex, newMessages = [], i = -1;
+    var lockedIndices = [];
     // if there's no room left, make more boxes
     if (!lockCount) {
-      if(boxCount === MAX_BOXES) {
-        return;
-      } else {
-        lockCount = boxCount;
-        boxCount *= 2;
-        messages.push(['Brand new!', 0]);
-        // always keep the main box in the top left and distribute the new locked boxes
-        // TODO: linear at front right now but random would be nicer
-        for (var i = 0; i < boxCount; i++) {
-          if (i < messages.length) { // active in even slots
-            newMessages.push(messages[i]);
-          } else { // locked in odd slots
-            locks[i] = true;
-            newMessages.push(['', 0]);
-          }
-        }
-        messages = newMessages;
-      }
+      expandBoxes();
     // if there are locked boxes, unlock a random one and use it
     } else {
-      lockedBoxIndex = Math.floor(Math.random() * lockCount + 1);
-      while (lockedBoxIndex) {
-        if(locks[++i] === true) lockedBoxIndex--;
-      }
-      messages[i] = ['Brand new!', 0];
-      locks[i] = false;
+      messages.forEach(function(message, index) {
+        if(!message) {
+          lockedIndices.push(index);
+        }
+      });
+      messages[lockedIndices[Math.floor(Math.random() * lockCount)]] = ['Brand new!', 0];
     }
     lockCount--;
-    io.sockets.emit('updateMessages', messages, locks);
+    io.sockets.emit('updateMessages', messages);
   };
+
+  // reduces the box count when at least half of the boxes are locked
+  function squishBoxes() {
+    var newMessages;
+    while (lockCount >= boxCount / 2) {
+      // strip the falses out
+      newMessages = messages.filter(Boolean);
+
+      // reset globals
+      boxCount /= 2;
+      lockCount = boxCount - newMessages.length;
+      messages = sparsify(newMessages, validCount, boxCount);
+
+      io.sockets.emit('updateMessages', messages);
+    }
+  }
+
+  // called when we need to add a box but there are no locked containers to fill
+  function expandBoxes() {
+    if(boxCount === MAX_BOXES) {
+      return;
+    } else {
+      lockCount = boxCount;
+      boxCount *= 2;
+      messages.push(['Brand new!', 0]);
+      // always keep the main box in the top left and distribute the new locked boxes
+      messages = sparsify(newMessages, boxCount);
+    }
+  }
+
+  function sparsify(messages, total) {
+    var validCount = messages.length;
+    // TODO: linearly adding to front right now but random would be nicer
+    for(var i = validCount; i < total; i++) {
+      messages.push(false);
+    }
+    return messages;
+  }
 
   var i = newConnections.length;
   // Start a synchronized timer for all the new connections
   while(i--) {
-    newConnections.pop().emit('updateMessages', messages, locks);
+    newConnections.pop().emit('updateMessages', messages);
   }
 
-  var b = true;
-  while (b) {
-    for(i = 0; i < boxCount; i++) {
-      b = lockBox(messages[i], i);
-      if (b) break;
-    }
-  }
+  // increment lock counters and lock inactive boxes
+  messages.forEach(function(message, index) {
+    lockBox(message, index);
+  });
+
+  squishBoxes();
 
   cycleCount++;
   if(!(cycleCount %= ADD_CYCLE_RATE) && messageCount / boxCount / ADD_CYCLE_RATE > ADD_INCOMING_RATE) {
@@ -131,7 +137,7 @@ function setMessage(index, message, socket) {
     }
   } else ++ipSpamChecker[socket.ipAddress];
 
-  if (locks[index]) {
+  if (!messages[index]) {
     socket.emit('news', 'That box seems to be locked right now.');
     socket.superStrikes += 0.5;
   } else if (typeof message !== 'string') {

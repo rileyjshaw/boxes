@@ -3,6 +3,25 @@ var React = require('react');
 var TinyBox = require('./tinybox.jsx');
 
 var UI = React.createClass({
+  baseColors: [
+    [52, 152, 219], // blue
+    [211, 84, 0], // deep orange
+    [38, 194, 129], // green
+    [155, 89, 182], // purple
+    [231, 76, 60], // red
+    [241, 196, 15], // yellow
+    [230, 126, 34], // orange
+    [26, 188, 156], // turquiose
+    [41, 105, 176], // navy
+    [243, 156, 18], // deep yellow
+    [255, 176, 242], // pink
+    [65, 92, 113], // deep navy
+    [124, 169, 81], // deep lime
+    [235, 126, 127], // salmon
+    [99, 211, 233], // baby blue
+    [192, 57, 43] // deep red
+  ],
+  grays: [], // set in componentWillMount
   getInitialState: function() {
     return {
       activeBox: 0,
@@ -11,36 +30,8 @@ var UI = React.createClass({
       messages: [['', 0]],
       boxWidth: 1,
       boxHeight: 1,
-      baseColors: [
-        [52, 152, 219], // blue
-        [211, 84, 0], // deep orange
-        [38, 194, 129], // green
-        [155, 89, 182], // purple
-        [231, 76, 60], // red
-        [241, 196, 15], // yellow
-        [230, 126, 34], // orange
-        [26, 188, 156], // turquiose
-        [41, 105, 176], // navy
-        [243, 156, 18], // deep yellow
-        [255, 176, 242], // pink
-        [65, 92, 113], // deep navy
-        [124, 169, 81], // deep lime
-        [235, 126, 127], // salmon
-        [99, 211, 233], // baby blue
-        [192, 57, 43] // deep red
-      ],
-      grays: [], // set in componentWillMount
-      lockTime: 48,
-      locks: [false]
+      lockTime: 48
     };
-  },
-  resetLocks: function() {
-    var boxCount = this.state.boxCount;
-    var newLocks = [];
-    while(boxCount--) {
-      newLocks.push(false);
-    }
-    this.setState({locks: newLocks});
   },
   setFocus: function(index) {
     this.setState({activeBox: index});
@@ -48,25 +39,20 @@ var UI = React.createClass({
   handleSubmit: function(index, message) {
     this.socket.emit('setMessage', index, message);
   },
-  lockBox: function(index) {
-    var newLocks = this.state.locks;
-    newLocks[index] = true;
-    this.setState({locks: newLocks});
-  },
   tick: function() {
     var newMessages = this.state.messages;
     // increment fade counters and lock any boxes that have been inactive for lockTime seconds
     newMessages.map((function(pair, index) {
       if (++pair[1] >= this.state.lockTime) {
-        this.lockBox(index);
+        pair[0] = false;
       }
     }).bind(this));
     this.setState({messages: newMessages})
   },
   componentWillMount: function() {
-    this.setState({grays: this.state.baseColors.map(function(color) {
+    this.grays = this.baseColors.map(function(color) {
       return Math.floor((color[0] + color[1] + color[2]) / 3);
-    })});
+    });
   },
   componentDidMount: function() {
     if (window.location.hostname === this.props.cdnUrl) {
@@ -88,7 +74,7 @@ var UI = React.createClass({
         newMessages[index] = [message, 0];
         this.setState({messages: newMessages});
       }).bind(this));
-      this.socket.on('updateMessages', (function (messages, locks) {
+      this.socket.on('updateMessages', (function (messages) {
         var width, height, messageLength = messages.length;
         if(messageLength === 1) {
           width = 1;
@@ -102,7 +88,7 @@ var UI = React.createClass({
             height = ++width / 2;
           }
         }
-        this.setState({boxCount: messages.length, locks: locks, messages: messages, boxWidth: width, boxHeight: height});
+        this.setState({boxCount: messages.length, messages: messages, boxWidth: width, boxHeight: height});
         if (!this.timer) {
           this.timer = setInterval(this.tick, 1000);
           this.tick();
@@ -125,7 +111,7 @@ var UI = React.createClass({
           ? <TinyBox
             key={index}
             permanent={true}
-            baseColor={this.state.baseColors[index]}
+            baseColor={this.baseColors[index]}
             index={index}
             active={this.state.activeBox === index}
             handleFocus={this.setFocus}
@@ -134,27 +120,27 @@ var UI = React.createClass({
             boxHeight={height}
           >{messagePair[0]}</TinyBox>
           // otherwise, decide whether it's a lock or a tinybox and include fade params
-          : this.state.locks[index]
-            ? <div key={index} className="lockedBox" style={{
-              backgroundColor: 'rgb(' + this.state.grays[index] + ', '
-                + this.state.grays[index] + ', '
-                + this.state.grays[index] + ')',
-              width: width,
-              height: height
-            }} />
-            : <TinyBox
-              key={index}
-              lockTime={this.state.lockTime}
-              baseColor={this.state.baseColors[index]}
-              fade={messagePair[1]}
-              index={index}
-              active={this.state.activeBox === index}
-              handleFocus={this.setFocus}
-              handleSubmit={this.handleSubmit}
-              gray={this.state.grays[index]}
-              boxWidth={width}
-              boxHeight={height}
-            >{messagePair[0]}</TinyBox>
+          : this.state.messages[index]
+            ? <TinyBox
+                key={index}
+                lockTime={this.state.lockTime}
+                baseColor={this.baseColors[index]}
+                fade={messagePair[1]}
+                index={index}
+                active={this.state.activeBox === index}
+                handleFocus={this.setFocus}
+                handleSubmit={this.handleSubmit}
+                gray={this.grays[index]}
+                boxWidth={width}
+                boxHeight={height}
+              >{messagePair[0]}</TinyBox>
+            : <div key={index} className="lockedBox" style={{
+                backgroundColor: 'rgb(' + this.grays[index] + ', '
+                  + this.grays[index] + ', '
+                  + this.grays[index] + ')',
+                width: width,
+                height: height
+              }} />
       );
     }).bind(this));
 
