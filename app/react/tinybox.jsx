@@ -93,24 +93,20 @@ var InputForm = React.createClass({
       this.props.handleFocus(-1);
     }).bind(this));
     key('up', (function() {
-      console.log(this.state.historyIndex, this.props.msgHistory);
       this.setState({
         historyIndex: Math.min(this.state.historyIndex + 1, this.props.msgHistory.length - 1)
       });
       this.setState({
         value: this.props.msgHistory[this.state.historyIndex] || ''
       });
-      console.log(this.state.historyIndex, this.props.msgHistory);
     }).bind(this));
     key('down', (function() {
-      console.log(this.state.historyIndex, this.props.msgHistory);
       this.setState({
         historyIndex: Math.max(this.state.historyIndex - 1, -1)
       });
       this.setState({
         value: this.props.msgHistory[this.state.historyIndex] || ''
       });
-      console.log(this.state.historyIndex, this.props.msgHistory);
 
     }).bind(this));
 

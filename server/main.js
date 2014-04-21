@@ -42,7 +42,7 @@ var clock = setInterval(function() {
       luckyWinner = lockedIndices[Math.floor(Math.random() * lockCount)];
       messages[luckyWinner] = ['Brand new!', 0];
       lockCount--;
-      io.sockets.emit('updateMessage', luckyWinner, messages[luckyWinner]);
+      io.sockets.emit('updateMessage', luckyWinner, messages[luckyWinner][0]);
     }
   };
 
