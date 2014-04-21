@@ -92,24 +92,8 @@ var InputForm = React.createClass({
     key('esc', (function() {
       this.props.handleFocus(-1);
     }).bind(this));
-    key('up', (function() {
-      this.setState({
-        historyIndex: Math.min(this.state.historyIndex + 1, this.props.msgHistory.length - 1)
-      });
-      this.setState({
-        value: this.props.msgHistory[this.state.historyIndex] || ''
-      });
-    }).bind(this));
-    key('down', (function() {
-      this.setState({
-        historyIndex: Math.max(this.state.historyIndex - 1, -1)
-      });
-      this.setState({
-        value: this.props.msgHistory[this.state.historyIndex] || ''
-      });
-
-    }).bind(this));
-
+    key('up', this.handleHistory);
+    key('down', this.handleHistory);
     this.refs.msgInput.getDOMNode().focus();
   },
   componentWillUnmount: function() {
@@ -118,10 +102,24 @@ var InputForm = React.createClass({
       var tagName = (event.target || event.srcElement).tagName;
       return !(tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA');
     };
-    key.unbind('esc', this.props.handleBlur);
+    key.unbind('esc');
+    key.unbind('up');
+    key.unbind('down');
   },
   handleChange: function(event) {
     this.setState({value: event.target.value.substr(0, 60)});
+  },
+  handleHistory: function(event, handler) {
+    var key = handler.shortcut, newIndex;
+    if (handler.shortcut === 'up') {
+      newIndex = Math.min(this.state.historyIndex + 1, this.props.msgHistory.length - 1);
+    } else if (handler.shortcut === 'down') {
+      newIndex = Math.max(this.state.historyIndex - 1, -1);
+    }
+    this.setState({
+      historyIndex: newIndex,
+      value: this.props.msgHistory[newIndex] || ''
+    });
   },
   handleSubmit: function() {
     var msgInputNode = this.refs.msgInput.getDOMNode();
