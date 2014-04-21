@@ -118,15 +118,16 @@ function setMessage(index, message, socket) {
   var ipSpamCount = ipSpamChecker[socket.ipAddress];
   var socketSpamCount = socketSpamChecker[socket.id];
 
-  // check for spamming from a single socket (warning at > 5 / second)
+  // check for spamming from a single socket (warning at > 10 / second)
   if (!socketSpamCount) {
     socketSpamChecker[socket.id] = 1;
-  } else if (socketSpamCount > 5) {
+  } else if (socketSpamCount > 10) {
     if(socket.socketWarningFlag) {
       socket.emit('news', 'There\'s too much traffic from your computer; refresh to reconnect.');
       socket.disconnect();
     } else {
       socket.socketWarningFlag = 1;
+      socketSpamChecker[socket.id] = 0;
       socket.emit('news', 'It looks like you\'re sending a lot of requests... try to slow down a bit.');
     }
   } else ++socketSpamChecker[socket.id];
