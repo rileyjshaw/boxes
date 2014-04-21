@@ -28,7 +28,7 @@ var clock = setInterval(function() {
 
   // open up a locked box or double the number of boxes
   function addBox() {
-    var lockedIndices = [];
+    var lockedIndices = [], luckyWinner;
     // if there's no room left, make more boxes
     if (!lockCount) {
       expandBoxes();
@@ -39,15 +39,16 @@ var clock = setInterval(function() {
           lockedIndices.push(index);
         }
       });
-      messages[lockedIndices[Math.floor(Math.random() * lockCount)]] = ['Brand new!', 0];
+      luckyWinner = lockedIndices[Math.floor(Math.random() * lockCount)];
+      messages[luckyWinner] = ['Brand new!', 0];
     }
     lockCount--;
-    io.sockets.emit('updateMessages', messages);
+    io.sockets.emit('updateMessage', luckyWinner, messages[luckyWinner]);
   };
 
   // reduces the box count when at least half of the boxes are locked
   function squishBoxes() {
-    var newMessages;
+    var squished = false, newMessages;
     while (lockCount >= boxCount / 2) {
       // strip the falses out
       newMessages = messages.filter(Boolean);
@@ -55,8 +56,11 @@ var clock = setInterval(function() {
       // reset globals
       boxCount /= 2;
       lockCount = boxCount - newMessages.length;
-      messages = sparsify(newMessages, validCount, boxCount);
+      messages = sparsify(newMessages, boxCount);
+      squished = true;
+    }
 
+    if(squished) {
       io.sockets.emit('updateMessages', messages);
     }
   }
@@ -66,43 +70,46 @@ var clock = setInterval(function() {
     if(boxCount === MAX_BOXES) {
       return;
     } else {
-      lockCount = boxCount;
+      lockCount = boxCount - 1;
       boxCount *= 2;
       messages.push(['Brand new!', 0]);
       // always keep the main box in the top left and distribute the new locked boxes
-      messages = sparsify(newMessages, boxCount);
+      messages = sparsify(messages, boxCount);
     }
   }
 
+  // fill a message array with locked boxes to ensure its length is 2^n
   function sparsify(messages, total) {
-    var validCount = messages.length;
-    // TODO: linearly adding to front right now but random would be nicer
-    for(var i = validCount; i < total; i++) {
-      messages.push(false);
+    var falsesToInsert = total - messages.length;
+
+    while (falsesToInsert--) {
+      // insert false at a random index between 1 and end
+      messages.splice(Math.floor(Math.random() * (total - 1) + 1), 0, false);
     }
+
     return messages;
   }
 
+  // start the synchronized timer for all new connections
   var i = newConnections.length;
-  // Start a synchronized timer for all the new connections
   while(i--) {
     newConnections.pop().emit('updateMessages', messages);
   }
 
-  // increment lock counters and lock inactive boxes
+  // increment lock counters and lock inactive boxes, squish if necessary
   messages.forEach(function(message, index) {
     lockBox(message, index);
   });
-
   squishBoxes();
 
+  // check if it's blowing up and addBox accordingly
   cycleCount++;
   if(!(cycleCount %= ADD_CYCLE_RATE) && messageCount / boxCount / ADD_CYCLE_RATE > ADD_INCOMING_RATE) {
     messageCount = 0;
     addBox();
   }
 
-  // Clear the spam checker
+  // clear the spam checker
   ipSpamChecker = {};
   socketSpamChecker = {};
 }, 1000);
@@ -111,16 +118,16 @@ function setMessage(index, message, socket) {
   var ipSpamCount = ipSpamChecker[socket.ipAddress];
   var socketSpamCount = socketSpamChecker[socket.id];
 
-  // Check for spamming from a single socket (warning at > 5 / second)
+  // check for spamming from a single socket (warning at > 5 / second)
   if (!socketSpamCount) {
     socketSpamChecker[socket.id] = 1;
   } else if (socketSpamCount > 5) {
     if(socket.socketWarningFlag) {
-      socket.emit('news', 'There\'s too much traffic from your computer; refresh to reconnect!');
+      socket.emit('news', 'There\'s too much traffic from your computer; refresh to reconnect.');
       socket.disconnect();
     } else {
       socket.socketWarningFlag = 1;
-      socket.emit('news', 'It looks like you\'re sending a lot of requests... you aren\'t cheating, are you?');
+      socket.emit('news', 'It looks like you\'re sending a lot of requests... try to slow down a bit.');
     }
   } else ++socketSpamChecker[socket.id];
 
@@ -129,11 +136,11 @@ function setMessage(index, message, socket) {
     ipSpamChecker[socket.ipAddress] = 1;
   } else if (++ipSpamCount > 400) {
     if(socket.ipWarningFlag) {
-      socket.emit('news', 'There\'s too much traffic from your network. Try not to ruin the game for everyone, refresh to reconnect.');
+      socket.emit('news', 'There\'s too much traffic from your network; refresh to reconnect.');
       socket.disconnect();
     } else {
       socket.ipWarningFlag = 1;
-      socket.emit('news', 'It looks like you\'re sending a lot of requests... you aren\'t cheating, are you?');
+      socket.emit('news', 'It looks like your network is sending a lot of requests... try to slow down a bit.');
     }
   } else ++ipSpamChecker[socket.ipAddress];
 
