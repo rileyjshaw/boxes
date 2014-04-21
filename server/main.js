@@ -8,16 +8,17 @@ var ADD_INCOMING_RATE = 3; // rate per second that messages need to arrive since
 var newConnections = [];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
-var boxCount = 1;
 var messages = [['', 0]];
 var locks = [];
-var lockCount = 0;
-var cycleCounter = 0;
-var messageCounter = 0;
 
-var fadeClock = setInterval(function() {
+var boxCount = 1;
+var lockCount = 0;
+var cycleCount = 0;
+var messageCount = 0;
+
+var clock = setInterval(function() {
   // Lock a box if it has been inactive for 180s
-  var lockHandler = function(message, index) {
+  function lockBox(message, index) {
     if (++message[1] === LOCK_TIME && index) {
       locks[index] = true;
       // Downsize if half of the boxes are locked
@@ -38,9 +39,9 @@ var fadeClock = setInterval(function() {
         return true;
       }
     }
-  };
+  }
 
-  var addHandler = function() {
+  function addBox() {
     var lockedBoxIndex, newMessages = [], i = -1;
     // if there's no room left, make more boxes
     if (!lockCount) {
@@ -84,15 +85,15 @@ var fadeClock = setInterval(function() {
   var b = true;
   while (b) {
     for(i = 0; i < boxCount; i++) {
-      b = lockHandler(messages[i], i);
+      b = lockBox(messages[i], i);
       if (b) break;
     }
   }
 
-  cycleCounter++;
-  if(!(cycleCounter %= ADD_CYCLE_RATE) && messageCounter / boxCount / ADD_CYCLE_RATE > ADD_INCOMING_RATE) {
-    messageCounter = 0;
-    addHandler();
+  cycleCount++;
+  if(!(cycleCount %= ADD_CYCLE_RATE) && messageCount / boxCount / ADD_CYCLE_RATE > ADD_INCOMING_RATE) {
+    messageCount = 0;
+    addBox();
   }
 
   // Clear the spam checker
@@ -145,7 +146,7 @@ function setMessage(index, message, socket) {
   } else {
     messages[index] = [message, 0];
     io.sockets.emit('updateMessage', index, message);
-    messageCounter++;
+    messageCount++;
   }
 
   if (socket.superStrikes >= 3) {
