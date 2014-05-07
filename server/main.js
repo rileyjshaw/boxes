@@ -1,6 +1,7 @@
 var io = require('socket.io').listen(8002);
 
 var MAX_BOXES = 16; // boxes
+var MAX_MESSAGES = 16;
 var LOCK_TIME = 48; // seconds
 var ADD_CYCLE_RATE = 5; // how many seconds between checking if we should add more boxes
 var ADD_INCOMING_RATE = 2; // rate per second (per box) that messages need to arrive since the last check to call addBox()
@@ -9,7 +10,7 @@ var LOCK_MSG = false; // stored in messages[] at a locked index
 var newConnections = [];
 var ipSpamChecker = {};
 var socketSpamChecker = {};
-var messages = [['', 0]];
+var messages = [[[], 0]];
 
 var boxCount = 1;
 var lockCount = 0;
@@ -21,6 +22,7 @@ var clock = setInterval(function() {
   // checking index to ensure we never lock the first box
   function lockBox(message, index) {
     if (++message[1] === LOCK_TIME && index) {
+      io.sockets.emit('lockBox', index);
       messages[index] = LOCK_MSG;
       lockCount++;
     }
@@ -40,9 +42,9 @@ var clock = setInterval(function() {
         }
       });
       luckyWinner = lockedIndices[Math.floor(Math.random() * lockCount)];
-      messages[luckyWinner] = ['Brand new!', 0];
+      messages[luckyWinner] = [['Brand new!'], 0];
       lockCount--;
-      io.sockets.emit('updateMessage', luckyWinner, messages[luckyWinner][0]);
+      io.sockets.emit('pushMessage', luckyWinner, 'Brand new!');
     }
   };
 
@@ -71,7 +73,7 @@ var clock = setInterval(function() {
     if(boxCount !== MAX_BOXES) {
       lockCount = boxCount - 1;
       boxCount *= 2;
-      messages.push(['Brand new!', 0]);
+      messages.push([['Brand new!'], 0]);
       // always keep the main box in the top left and distribute the new locked boxes
       messages = sparsify(messages, boxCount);
       io.sockets.emit('updateMessages', messages);
@@ -156,12 +158,16 @@ function setMessage(index, message, socket) {
   } else if(message.length > 60) {
     socket.emit('news', 'Your message can\'t be more than 60 characters.');
     socket.superStrikes++;
-  } else if(message === messages[index][0]) {
+  } else if(message === messages[index][0][ messages[index][0].length - 1 ]) {
     socket.emit('news', 'That\'s already the message, yo!');
     socket.superStrikes += 0.3;
   } else {
-    messages[index] = [message, 0];
-    io.sockets.emit('updateMessage', index, message);
+    // push the new message, and remove the first if the array is too long
+    if (messages[index][0].push(message) > MAX_MESSAGES) {
+      messages[index][0].shift();
+    }
+    messages[index][1] = 0;
+    io.sockets.emit('pushMessage', index, message);
     messageCount++;
   }
 

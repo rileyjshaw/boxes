@@ -2,13 +2,23 @@ var React = require('react/addons');
 var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 var TinyBox = React.createClass({
+  getInitialState: function() {
+    return {class: ''};
+  },
   handleFocus: function(index) {
     this.props.handleFocus(index);
+  },
+  componentWillMount: function() {
+    React.initializeTouchEvents(true);
   },
   setFocusToSelf: function() {
     this.props.active
       ? this.refs.form.refs.msgInput.getDOMNode().focus()
       : this.handleFocus(this.props.index);
+  },
+  setFocusToSelfMobile: function() {
+    this.setState({class: 'mobile-active'});
+    this.setFocusToSelf();
   },
   handleSubmit: function(message) {
     this.props.handleSubmit(this.props.index, message);
@@ -45,7 +55,8 @@ var TinyBox = React.createClass({
     var superDarkColor = this.colorShift(baseColor, -shiftVal * 3);
 
     return (
-      <div className="tinyBox" onClick={this.setFocusToSelf} style={
+      <div className="tinyBox" onClick={this.setFocusToSelf}
+        onTouchStart={this.setFocusToSelfMobile} style={
         {
           height: this.props.boxHeight,
           width: this.props.boxWidth,
@@ -53,8 +64,10 @@ var TinyBox = React.createClass({
           backgroundColor: 'rgb(' + baseColor + ')'
         }
       }>
-        <ReactCSSTransitionGroup className="messageTransitionContainer" transitionName="message" component={React.DOM.div}>
-          <MessageBanner key={this.props.children} />
+
+        <ReactCSSTransitionGroup transitionName="messageList" transitionLeave={false}>
+          <MessageList messages={this.props.children} />
+        }
         </ReactCSSTransitionGroup>
 
         {this.props.active
@@ -71,9 +84,17 @@ var TinyBox = React.createClass({
   }
 });
 
-var MessageBanner = React.createClass({
+var MessageList = React.createClass({
   render: function() {
-    return <p>{this.props.key}</p>
+    var messages = this.props.messages.map(function(message, index) {
+
+      return <li key={message[1]}>{message[0]}</li>
+    });
+    return (
+      <ReactCSSTransitionGroup className={"messageTransitionContainer"} transitionName="message" transitionLeave={false} component={React.DOM.ul}>
+        {messages}
+      </ReactCSSTransitionGroup>
+    );
   }
 });
 
@@ -121,15 +142,19 @@ var InputForm = React.createClass({
       value: this.props.msgHistory[newIndex] || ''
     });
   },
-  handleSubmit: function() {
+  handleSubmit: function(e) {
+    e.preventDefault();
     var msgInputNode = this.refs.msgInput.getDOMNode();
     var msgInput = msgInputNode.value.trim();
-    if(msgInput !== this.props.currentMsg) {
-      if (!msgInput || typeof msgInput !== 'string' || msgInput.length > 60) {
-        console.log('There was an issue with your input');
-      } else {
-        this.props.handleSubmit(msgInput);
-      }
+    if (
+      !msgInput ||
+      typeof msgInput !== 'string' ||
+      (this.props.currentMsg.length && msgInput === this.props.currentMsg[this.props.currentMsg.length - 1][0]) ||
+      msgInput.length > 60
+    ) {
+      console.log('There was an issue with your input');
+    } else {
+      this.props.handleSubmit(msgInput);
     }
     this.setState({
       value: '',

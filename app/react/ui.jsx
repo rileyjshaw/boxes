@@ -2,6 +2,7 @@ var React = require('react');
 
 var TinyBox = require('./tinybox.jsx');
 
+var MAX_MESSAGES = 3;
 var LOCK_TIME = 48; // seconds
 var LOCK_MSG = false; // stored in messages[] at a locked index
 
@@ -30,7 +31,12 @@ var UI = React.createClass({
       activeBox: 0,
       boxCount: 1,
       boxSqrt: 1,
-      messages: [['', 0]],
+      // messages is a list containing each TinyBox's data
+      // messages[i][0] is a list of [message, unique_id] pairs
+      // messages[i][1] is the time since the last message
+      messages: [
+        [[[]], 0]
+      ],
       boxWidth: 1,
       boxHeight: 1,
       msgHistory: []
@@ -40,7 +46,7 @@ var UI = React.createClass({
     this.setState({activeBox: index});
   },
   handleSubmit: function(index, message) {
-      // keep the last 60 messages
+    // keep the last 60 messages
     this.setState({
       msgHistory: [message].concat(this.state.msgHistory).slice(0, 60)
     });
@@ -50,9 +56,11 @@ var UI = React.createClass({
     // increment fade counters and lock any boxes that have been inactive for LOCK_TIME seconds
     var newMessages = this.state.messages.map((function(messagePair, index) {
       var incMessage = messagePair && [messagePair[0], messagePair[1] + 1];
+      /* For now, locking from the server instead
       if (incMessage[1] >= LOCK_TIME && index) {
         incMessage = LOCK_MSG;
       }
+      */
       return incMessage;
     }).bind(this));
     this.setState({messages: newMessages})
@@ -63,7 +71,7 @@ var UI = React.createClass({
     });
   },
   componentDidMount: function() {
-    if (window.location.hostname === this.props.cdnUrl) {
+    if (true) {//(window.location.hostname === this.props.cdnUrl) {
       // extend io.connect to add a news listener to all new connections
       io.connect = (function(originalFunction) {
         return function(url) {
@@ -77,11 +85,16 @@ var UI = React.createClass({
 
       this.socket = io.connect('http://' + this.props.socketUrl + ':' + this.props.socketPort);
 
-      this.socket.on('updateMessage', (function (index, message) {
+      this.socket.on('pushMessage', (function (index, message) {
         var newMessages = this.state.messages;
-        newMessages[index] = [message, 0];
+        // push the new message, and remove the first if the array is too long
+        if (newMessages[index][0].push([message, Math.random()]) > MAX_MESSAGES) {
+          newMessages[index][0].shift();
+        }
+        newMessages[index][1] = 0;
         this.setState({messages: newMessages});
       }).bind(this));
+
       this.socket.on('updateMessages', (function (messages) {
         var width, height, messageLength = messages.length;
         if(messageLength === 1) {
@@ -96,17 +109,39 @@ var UI = React.createClass({
             height = ++width / 2;
           }
         }
+        // add unique ids to each message
+        messages = messages.map(function(message) {
+          var stringsWithIds;
+
+          if (!message) return undefined;
+
+          stringsWithIds = message[0].map(function(str) {
+            return [str, Math.random()];
+          });
+          return [stringsWithIds, message[1]];
+        });
         this.setState({boxCount: messages.length, messages: messages, boxWidth: width, boxHeight: height});
-        if (!this.timer) {
-          this.timer = setInterval(this.tick, 1000);
-          this.tick();
-        }
       }).bind(this));
+
+      this.socket.on('lockBox', function(index) {
+        var newMessages = this.state.messages;
+        newMessages[index] = undefined;
+        this.setState({messages: newMessages});
+      });
+
+
+      if (!this.timer) {
+        this.timer = setInterval(this.tick, 1000);
+        this.tick();
+      }
     } else {
       throw new Error('window.location.hostname is ' + window.location.hostname +
         ' but we were expecting for it to be ' + this.props.cdnUrl +
         '. Change the value of cdnUrl in /app/js/main.jsx to the correct hostname.');
     }
+  },
+  componentWillUnmount: function() {
+    clearInterval(this.timer);
   },
   render: function() {
     var tinyBoxes = this.state.messages.map((function(messagePair, index) {
