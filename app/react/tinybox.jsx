@@ -145,7 +145,6 @@ var InputForm = React.createClass({
     if (
       !msgInput ||
       typeof msgInput !== 'string' ||
-      (this.props.currentMsg.length && msgInput === this.props.currentMsg[this.props.currentMsg.length - 1][0]) ||
       msgInput.length > 60
     ) {
       console.log('There was an issue with your input');

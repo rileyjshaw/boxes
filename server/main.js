@@ -159,9 +159,6 @@ function setMessage(index, message, socket) {
   } else if(message.length > 60) {
     socket.emit('news', 'Your message can\'t be more than 60 characters.');
     socket.superStrikes++;
-  } else if(message === messages[index][0][ messages[index][0].length - 1 ]) {
-    socket.emit('news', 'That\'s already the message, yo!');
-    socket.superStrikes += 0.3;
   } else {
     // push the new message, and remove from the front if the array is too long
     overflowMsgs = Math.max(messages[index][0].push(message) - MAX_MESSAGES, 0);
