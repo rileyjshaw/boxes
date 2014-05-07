@@ -55,33 +55,25 @@ li
   cursor: pointer
 
 .messageTransitionContainer
-  transition: background 4s linear
   box-sizing: border-box
   position: absolute
   bottom: 0
   min-height: 100%
   margin: 0
   padding: 0 0 (1.5 * .75) * 1em
-  background: green
 
   li
     position: relative
     margin: .24em .36em
 
-
-.entering
-  background: black
-
 .message-enter
-  transition: left 5s linear, top 5s linear
+  transition: height .12s linear, top .12s linear
   height: 0
   top: 1140px
 
   &.message-enter-active
     height: 1.2em
     top: 0
-
-
 
 form
   position: absolute

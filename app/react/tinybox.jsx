@@ -65,10 +65,7 @@ var TinyBox = React.createClass({
         }
       }>
 
-        <ReactCSSTransitionGroup transitionName="messageList" transitionLeave={false}>
-          <MessageList messages={this.props.children} />
-        }
-        </ReactCSSTransitionGroup>
+        <MessageList messages={this.props.children} />
 
         {this.props.active
           ? <InputForm handleFocus={this.handleFocus} handleSubmit={this.handleSubmit} currentMsg={this.props.children} msgHistory={this.props.msgHistory} ref="form" style={
@@ -87,8 +84,7 @@ var TinyBox = React.createClass({
 var MessageList = React.createClass({
   render: function() {
     var messages = this.props.messages.map(function(message, index) {
-
-      return <li key={message[1]}>{message[0]}</li>
+      return <li key={'key-' + message[1]}>{message[0]}</li>
     });
     return (
       <ReactCSSTransitionGroup className={"messageTransitionContainer"} transitionName="message" transitionLeave={false} component={React.DOM.ul}>

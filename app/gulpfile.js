@@ -17,6 +17,7 @@ if(argv._[1] !== undefined) {
 // set defaults
 if(!argv.hasOwnProperty('cdn')) {
   if(argv.dev || argv._[0] === 'watch') {
+    console.log('wat');
     argv.cdn = 'localhost';
   } else {
     argv.cdn = 'tinybox.es';  //replace this with wherever you're keeping the static content

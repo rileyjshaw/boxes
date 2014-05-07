@@ -123,11 +123,11 @@ var UI = React.createClass({
         this.setState({boxCount: messages.length, messages: messages, boxWidth: width, boxHeight: height});
       }).bind(this));
 
-      this.socket.on('lockBox', function(index) {
+      this.socket.on('lockBox', (function(index) {
         var newMessages = this.state.messages;
         newMessages[index] = undefined;
         this.setState({messages: newMessages});
-      });
+      }).bind(this));
 
 
       if (!this.timer) {
