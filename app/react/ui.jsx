@@ -2,7 +2,7 @@ var React = require('react');
 
 var TinyBox = require('./tinybox.jsx');
 
-var MAX_MESSAGES = 3;
+var MAX_MESSAGES = 20;
 var LOCK_TIME = 48; // seconds
 var LOCK_MSG = false; // stored in messages[] at a locked index
 
@@ -88,20 +88,24 @@ var UI = React.createClass({
       this.socket.on('pushMessage', (function (index, message) {
         var newMessages = this.state.messages;
         // push the new message, and remove the first if the array is too long
-        if (newMessages[index][0].push([message, Math.random()]) > MAX_MESSAGES) {
+        var newLength = newMessages[index][0].push([message, Math.random()]);
+        var overflowMsgs = Math.max(newLength - MAX_MESSAGES, 0);
+
+        while(overflowMsgs--)
           newMessages[index][0].shift();
-        }
+
         newMessages[index][1] = 0;
         this.setState({messages: newMessages});
       }).bind(this));
 
       this.socket.on('updateMessages', (function (messages) {
-        var width, height, messageLength = messages.length;
-        if(messageLength === 1) {
+        var width, height, messagesLength = messages.length;
+
+        if(messagesLength === 1) {
           width = 1;
           height = 1;
         } else {
-          base2Log = Math.log(messageLength) / Math.log(2);
+          base2Log = Math.log(messagesLength) / Math.log(2);
           width = base2Log;
           height = base2Log;
           // if the log is odd, width needs to be double height
@@ -111,9 +115,13 @@ var UI = React.createClass({
         }
         // add unique ids to each message
         messages = messages.map(function(message) {
+          if (!message) return undefined;
+
+          var messageLength = message[0].length;
           var stringsWithIds;
 
-          if (!message) return undefined;
+          while(messageLength-- > MAX_MESSAGES)
+            message[0].shift();
 
           stringsWithIds = message[0].map(function(str) {
             return [str, Math.random()];

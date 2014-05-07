@@ -1,7 +1,7 @@
 var io = require('socket.io').listen(8002);
 
 var MAX_BOXES = 16; // boxes
-var MAX_MESSAGES = 16;
+var MAX_MESSAGES = 20;
 var LOCK_TIME = 48; // seconds
 var ADD_CYCLE_RATE = 5; // how many seconds between checking if we should add more boxes
 var ADD_INCOMING_RATE = 2; // rate per second (per box) that messages need to arrive since the last check to call addBox()
@@ -121,6 +121,7 @@ var clock = setInterval(function() {
 function setMessage(index, message, socket) {
   var ipSpamCount = ipSpamChecker[socket.ipAddress];
   var socketSpamCount = socketSpamChecker[socket.id];
+  var overflowMsgs;
 
   // check for spamming from a single socket (warning at > 10 / second)
   if (!socketSpamCount) {
@@ -162,10 +163,11 @@ function setMessage(index, message, socket) {
     socket.emit('news', 'That\'s already the message, yo!');
     socket.superStrikes += 0.3;
   } else {
-    // push the new message, and remove the first if the array is too long
-    if (messages[index][0].push(message) > MAX_MESSAGES) {
+    // push the new message, and remove from the front if the array is too long
+    overflowMsgs = Math.max(messages[index][0].push(message) - MAX_MESSAGES, 0);
+    while(overflowMsgs--)
       messages[index][0].shift();
-    }
+
     messages[index][1] = 0;
     io.sockets.emit('pushMessage', index, message);
     messageCount++;
