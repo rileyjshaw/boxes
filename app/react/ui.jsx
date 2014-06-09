@@ -52,6 +52,9 @@ var UI = React.createClass({
     });
     this.socket.emit('setMessage', index, message);
   },
+  showInfo: function() {
+    alert('Created by rileyjshaw. Tested with BrowserStack.');
+  },
   tick: function() {
     // increment fade counters and lock any boxes that have been inactive for LOCK_TIME seconds
     var newMessages = this.state.messages.map((function(messagePair, index) {
@@ -200,6 +203,7 @@ var UI = React.createClass({
     return (
       <div className={'page boxes' + this.state.boxCount}>
         {tinyBoxes}
+        <b id="info" onClick={this.showInfo}>?</b>
       </div>
     );
   }
